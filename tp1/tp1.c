@@ -37,6 +37,10 @@ int array_max(const int *array, int length) {
 }
 
 void array_map(int *array, int length, int f(int)) {
+    if (f == NULL) { return; }
+    for (int i = 0; i < length; i++){
+        array[i] = f(array[i]);
+    }
     return;
 }
 
