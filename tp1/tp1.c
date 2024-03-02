@@ -1,20 +1,39 @@
 #include "tp1.h"
 #include <stdlib.h>
+#include <math.h>
 
 bool is_prime(int x){
+    for (int i = 2; i <= sqrt(x); i++){
+        if (x % i == 0){
+            return false;
+        }
+    }
     return true;
 }
 
 int storage_capacity(float d, float v){
-    return 0;
+    if (d == 0) { return 0; }
+
+    float result = d / v;
+    if (result < 0) { return 0; }
+    return (int) result;
 }
 
 void swap(int *x, int *y) {
+    int temp = *x;
+    *x = *y;
+    *y = temp;
     return;
 }
 
 int array_max(const int *array, int length) {
-    return 0;
+    int max = array[0];
+    for (int i = 1; i < length; i++){
+        if (array[i] > max){
+            max = array[i];
+        }
+    }
+    return max;
 }
 
 void array_map(int *array, int length, int f(int)) {
