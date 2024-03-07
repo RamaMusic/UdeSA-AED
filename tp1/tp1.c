@@ -3,8 +3,16 @@
 #include <math.h>
 
 bool is_prime(int x){
-    for (int i = 2; i <= sqrt(x); i++){
-        if (x % i == 0){
+    // Casos base
+    if (x <= 1) return false;
+    if (x <= 3) return true;
+    if (x % 2 == 0 || x % 3 == 0) return false;
+    
+    // Guardo la raiz cuadrada de x para no calcularla en cada iteracion
+    int sqrtX = (int)sqrt(x);
+
+    for (int i = 5; i <= sqrtX; i += 6){
+        if (x % i == 0 || x % (i + 2) == 0){
             return false;
         }
     }
@@ -12,14 +20,14 @@ bool is_prime(int x){
 }
 
 int storage_capacity(float d, float v){
-    if (d == 0) { return 0; }
-
-    float result = d / v;
-    if (result < 0) { return 0; }
-    return (int) result;
+    if (d == 0 || d / v < 0) { return 0; }
+    return (int) (d / v);
 }
 
 void swap(int *x, int *y) {
+
+    if (!x || !y) return; // Si alguno de los punteros es NULL, no hago nada.
+
     int temp = *x;
     *x = *y;
     *y = temp;
@@ -28,6 +36,9 @@ void swap(int *x, int *y) {
 
 int array_max(const int *array, int length) {
     int max = array[0];
+
+    if (length <= 0) { return 0; }
+
     for (int i = 1; i < length; i++){
         if (array[i] > max){
             max = array[i];
@@ -37,7 +48,7 @@ int array_max(const int *array, int length) {
 }
 
 void array_map(int *array, int length, int f(int)) {
-    if (f == NULL) { return; }
+    if (f == NULL || array == NULL || length <= 0) { return; } // Si no hay función o el array esta vacío, no hago nada.
     for (int i = 0; i < length; i++){
         array[i] = f(array[i]);
     }
@@ -45,25 +56,86 @@ void array_map(int *array, int length, int f(int)) {
 }
 
 int *copy_array(const int *array, int length) {
-    return NULL;
+    if (array == NULL || length <= 0) { return NULL; } // Si el array esta vacio lo ignoro.
+
+    int *copy = malloc(length * sizeof(int));
+    if (copy == NULL) { return NULL; } // Si no puedo reservar memoria, devuelvo NULL.
+
+    for (int i = 0; i < length; i++){
+        copy[i] = array[i];
+    }
+    return copy;
 }
 
 int **copy_array_of_arrays(const int **array_of_arrays, const int *array_lenghts, int array_amount){
-    return NULL;
+    if (array_of_arrays == NULL || array_lenghts == NULL || array_amount <= 0) { return NULL; } // Si el array esta vacio, no hago nada.
+
+    int **copy = (int **) malloc(array_amount * sizeof(int *));
+    if (copy == NULL) { return NULL; } // Si no puedo reservar memoria, devuelvo NULL.
+
+    for (int i = 0; i < array_amount; i++){
+        // Si el array esta vacio, libero la memoria ya reservada y devuelvo NULL.
+        if (array_of_arrays[i] == NULL || array_lenghts[i] <= 0) {
+             copy[i] = NULL; 
+        } else {
+            copy[i] = copy_array(array_of_arrays[i], array_lenghts[i]);
+            if (copy[i] == NULL) { // Si no puedo reservar memoria, libero lo que reservé y devuelvo NULL.
+                for (int j = 0; j < i; j++){
+                    free(copy[j]);
+                }
+                free(copy);
+                return NULL;
+            }
+        }
+    }
+
+    return copy; // return the copied array
 }
 
 void free_array_of_arrays(int **array_of_arrays, int *array_lenghts, int array_amount){
+    if (array_of_arrays == NULL || array_lenghts == NULL || array_amount <= 0) { return; } // Si el array está vacio, no hago nada.
+
+    for (int i = 0; i < array_amount; i++){
+        if (array_of_arrays[i] != NULL){
+            free(array_of_arrays[i]);
+        }
+    }
+    free(array_of_arrays);
+    free(array_lenghts);
     return;
 }
 
 void bubble_sort(int *array, int length){
-    return;
+    if (array == NULL || length <= 1) { return; } // Si el array es nulo o el largo es 0, no hago nada. Si el largo es 1, ya está ordenada.
+
+    bool swapped = false; // Creo un flag para indicar si la lista ya está ordenada o no.
+
+    for (int i = 0; i < length; i++) {
+        for (int j = i + 1; j < length; j++){
+            if (array[j] < array[i]) {
+                swap(&array[j], &array[i]);
+                swapped = true;
+            }
+        }
+        if (!swapped) { return; } // Si no hubo swaps, la lista ya está ordenada.
+    }
 }
 
 bool array_equal(const int *array1, int length1, const int *array2, int length2){
-    return true;
-}
+    // Todo esto claramente se puede hacer en un mismo if, pero para facilitar la lectura del código lo voy a separar en casos
+    if (array1 == NULL && array2 == NULL) { return true; } // Si ambos arrays son nulos, son iguales.
+    if (array1 == NULL || array2 == NULL) { return false; } // Si uno de los arrays es nulo y el otro no, no son iguales.
 
+    if (length1 <= 0 && length2 <= 0) { return true; } // Si ambos arrays están vacíos, son iguales.
+    if (length1 <= 0 || length2 <= 0) { return false; } // Si uno de los arrays está vacío y el otro no, no son iguales.
+    if (length1 != length2) { return false; } // Si los largos de los arrays son distintos, no son iguales.
+
+    // TENGO QUE ORDENAR LOS ARRAYSSSSS
+
+    for (int i = 0; i < length1; i++){
+        if (array1[i] != array2[i]) { return false; } // Si hay al menos un elemento distinto, los arrays no son iguales.
+    }
+}
 bool integer_anagrams(const int *array1, int length1,
                       const int *array2, int length2){
     return true;
