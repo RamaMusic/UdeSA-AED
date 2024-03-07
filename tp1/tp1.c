@@ -108,16 +108,12 @@ void free_array_of_arrays(int **array_of_arrays, int *array_lenghts, int array_a
 void bubble_sort(int *array, int length){
     if (array == NULL || length <= 1) { return; } // Si el array es nulo o el largo es 0, no hago nada. Si el largo es 1, ya está ordenada.
 
-    bool swapped = false; // Creo un flag para indicar si la lista ya está ordenada o no.
-
     for (int i = 0; i < length; i++) {
         for (int j = i + 1; j < length; j++){
             if (array[j] < array[i]) {
                 swap(&array[j], &array[i]);
-                swapped = true;
             }
         }
-        if (!swapped) { return; } // Si no hubo swaps, la lista ya está ordenada.
     }
 }
 
@@ -130,13 +126,35 @@ bool array_equal(const int *array1, int length1, const int *array2, int length2)
     if (length1 <= 0 || length2 <= 0) { return false; } // Si uno de los arrays está vacío y el otro no, no son iguales.
     if (length1 != length2) { return false; } // Si los largos de los arrays son distintos, no son iguales.
 
-    // TENGO QUE ORDENAR LOS ARRAYSSSSS
-
     for (int i = 0; i < length1; i++){
         if (array1[i] != array2[i]) { return false; } // Si hay al menos un elemento distinto, los arrays no son iguales.
     }
+    return true; // Si llegué hasta acá, los arrays son iguales.
 }
-bool integer_anagrams(const int *array1, int length1,
-                      const int *array2, int length2){
-    return true;
+bool integer_anagrams(const int *array1, int length1, const int *array2, int length2){
+    if (array1 == NULL && array2 == NULL) { return false; } // Si ambos arrays son nulos, no corro el programa.
+    if (array1 == NULL || array2 == NULL) { return false; } // Si uno de los arrays es nulo y el otro no, no son anagramas.
+
+    if (length1 <= 0 && length2 <= 0) { return true; } // Si ambos arrays están vacíos, son anagramas.
+    if (length1 <= 0 || length2 <= 0) { return false; } // Si uno de los arrays está vacío y el otro no, no son anagramas.
+    if (length1 != length2) { return false; } // Si los largos de los arrays son distintos, no son anagramas.
+
+    int *copy1 = copy_array(array1, length1);
+    int *copy2 = copy_array(array2, length2);
+
+    if (copy1 == NULL || copy2 == NULL) { // Si no puedo reservar memoria, libero lo que reservé y devuelvo false.
+        free(copy1);
+        free(copy2);
+        return false;
+    } // Esto lo verifico en copy_array, lo necesito aca??
+
+    bubble_sort(copy1, length1);
+    bubble_sort(copy2, length2);
+
+    bool result = array_equal(copy1, length1, copy2, length2);
+
+    free(copy1);
+    free(copy2);
+
+    return result;
 }
