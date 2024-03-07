@@ -26,7 +26,7 @@ int storage_capacity(float d, float v){
 
 void swap(int *x, int *y) {
 
-    if (!x || !y) return; // Si alguno de los punteros es NULL, no hago nada.
+    if (x == NULL || y == NULL) return; // Si alguno de los punteros es NULL, no hago nada.
 
     int temp = *x;
     *x = *y;
@@ -70,7 +70,7 @@ int *copy_array(const int *array, int length) {
 int **copy_array_of_arrays(const int **array_of_arrays, const int *array_lenghts, int array_amount){
     if (array_of_arrays == NULL || array_lenghts == NULL || array_amount <= 0) { return NULL; } // Si el array esta vacio, no hago nada.
 
-    int **copy = (int **) malloc(array_amount * sizeof(int *));
+    int **copy = malloc(array_amount * sizeof(int *));
     if (copy == NULL) { return NULL; } // Si no puedo reservar memoria, devuelvo NULL.
 
     for (int i = 0; i < array_amount; i++){
@@ -108,13 +108,20 @@ void free_array_of_arrays(int **array_of_arrays, int *array_lenghts, int array_a
 void bubble_sort(int *array, int length){
     if (array == NULL || length <= 1) { return; } // Si el array es nulo o el largo es 0, no hago nada. Si el largo es 1, ya está ordenada.
 
-    for (int i = 0; i < length; i++) {
-        for (int j = i + 1; j < length; j++){
-            if (array[j] < array[i]) {
-                swap(&array[j], &array[i]);
+    bool swapped = false; // Variable para saber si hubo cambios en la iteración.
+    for (int i = 0; i < length-1; i++) {
+        swapped = false;
+        for (int j = 0; j < length-i-1; j++){
+            if (array[j] > array[j+1]) {
+                swap(&array[j], &array[j+1]);
+                swapped = true;
             }
         }
+
+        // SI no hubo cambios, el array ya está ordenado.
+        if (!swapped) return;
     }
+    return;
 }
 
 bool array_equal(const int *array1, int length1, const int *array2, int length2){
