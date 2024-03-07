@@ -140,7 +140,6 @@ bool array_equal(const int *array1, int length1, const int *array2, int length2)
 }
 
 bool integer_anagrams(const int *array1, int length1, const int *array2, int length2){
-    if (array1 == NULL && array2 == NULL) { return false; } // Si ambos arrays son nulos, no corro el programa.
     if (array1 == NULL || array2 == NULL) { return false; } // Si uno de los arrays es nulo y el otro no, no son anagramas.
 
     if (length1 <= 0 && length2 <= 0) { return true; } // Si ambos arrays están vacíos, son anagramas.
