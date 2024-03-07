@@ -147,9 +147,9 @@ bool integer_anagrams(const int *array1, int length1, const int *array2, int len
     if (length1 <= 0 || length2 <= 0) { return false; } // Si uno de los arrays está vacío y el otro no, no son anagramas.
     if (length1 != length2) { return false; } // Si los largos de los arrays son distintos, no son anagramas.
 
-
-    int count_array1[length1];
-    int count_array2[length2];
+    // Solo asigno 10 espacios, ya que son todos los numeros posibles del 0 al 9.
+    int count_array1[10];
+    int count_array2[10];
 
     for (int i = 0; i < length1; i++){
         count_array1[i] = 0;
@@ -161,7 +161,5 @@ bool integer_anagrams(const int *array1, int length1, const int *array2, int len
         count_array2[array2[i]]++;
     }
 
-    bool result = array_equal(count_array1, length1, count_array2, length2);
-
-    return result;
+    return array_equal(count_array1, length1, count_array2, length2);
 }
