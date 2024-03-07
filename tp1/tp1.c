@@ -138,6 +138,7 @@ bool array_equal(const int *array1, int length1, const int *array2, int length2)
     }
     return true; // Si llegué hasta acá, los arrays son iguales.
 }
+
 bool integer_anagrams(const int *array1, int length1, const int *array2, int length2){
     if (array1 == NULL && array2 == NULL) { return false; } // Si ambos arrays son nulos, no corro el programa.
     if (array1 == NULL || array2 == NULL) { return false; } // Si uno de los arrays es nulo y el otro no, no son anagramas.
@@ -146,22 +147,21 @@ bool integer_anagrams(const int *array1, int length1, const int *array2, int len
     if (length1 <= 0 || length2 <= 0) { return false; } // Si uno de los arrays está vacío y el otro no, no son anagramas.
     if (length1 != length2) { return false; } // Si los largos de los arrays son distintos, no son anagramas.
 
-    int *copy1 = copy_array(array1, length1);
-    int *copy2 = copy_array(array2, length2);
 
-    if (copy1 == NULL || copy2 == NULL) { // Si no puedo reservar memoria, libero lo que reservé y devuelvo false.
-        free(copy1);
-        free(copy2);
-        return false;
-    } // Esto lo verifico en copy_array, lo necesito aca??
+    int count_array1[length1];
+    int count_array2[length2];
 
-    bubble_sort(copy1, length1);
-    bubble_sort(copy2, length2);
+    for (int i = 0; i < length1; i++){
+        count_array1[i] = 0;
+        count_array2[i] = 0;
+    }
 
-    bool result = array_equal(copy1, length1, copy2, length2);
+    for (int i = 0; i < length1; i++){
+        count_array1[array1[i]]++;
+        count_array2[array2[i]]++;
+    }
 
-    free(copy1);
-    free(copy2);
+    bool result = array_equal(count_array1, length1, count_array2, length2);
 
     return result;
 }
