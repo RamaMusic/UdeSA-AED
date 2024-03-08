@@ -146,19 +146,24 @@ bool integer_anagrams(const int *array1, int length1, const int *array2, int len
     if (length1 <= 0 || length2 <= 0) { return false; } // Si uno de los arrays está vacío y el otro no, no son anagramas.
     if (length1 != length2) { return false; } // Si los largos de los arrays son distintos, no son anagramas.
 
-    // Solo asigno 10 espacios, ya que son todos los numeros posibles del 0 al 9.
-    int count_array1[10];
-    int count_array2[10];
+    if (array_equal(array1, length1, array2, length2)) { return true; } // Si los arrays son iguales, son anagramas.
 
-    for (int i = 0; i < length1; i++){
-        count_array1[i] = 0;
-        count_array2[i] = 0;
+    int *copy1 = copy_array(array1, length1);
+    int *copy2 = copy_array(array2, length2);
+
+    if (copy1 == NULL || copy2 == NULL) { // Si no puedo reservar memoria, libero lo que reservé y devuelvo false.
+        free(copy1);
+        free(copy2);
+        return false;
     }
 
-    for (int i = 0; i < length1; i++){
-        count_array1[array1[i]]++;
-        count_array2[array2[i]]++;
-    }
+    bubble_sort( copy1, length1 );
+    bubble_sort( copy2, length2 );
 
-    return array_equal(count_array1, length1, count_array2, length2);
+    bool result = array_equal( copy1, length1, copy2, length2 );
+
+    free( copy1 );
+    free( copy2 );
+
+    return result;
 }
