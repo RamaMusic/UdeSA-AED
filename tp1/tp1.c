@@ -165,11 +165,5 @@ bool integer_anagrams(const int *array1, int length1, const int *array2, int len
     free( copy1 );
     free( copy2 );
 
-    // PREGUNTAR: Esto está bien así? o técnicamente estoy casteando el array a otro tipo de dato dinámico?
-    // bubble_sort( (int *) array1, length1 );
-    // bubble_sort( (int *) array2, length2 );
-
-    // return array_equal( array1, length1, array2, length2 );
-
     return result;
 }
