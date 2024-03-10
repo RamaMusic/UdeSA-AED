@@ -148,22 +148,37 @@ bool integer_anagrams(const int *array1, int length1, const int *array2, int len
 
     if (array_equal(array1, length1, array2, length2)) { return true; } // Si los arrays son iguales, son anagramas.
 
-    int *copy1 = copy_array(array1, length1);
-    int *copy2 = copy_array(array2, length2);
+    // int *copy1 = copy_array(array1, length1);
+    // int *copy2 = copy_array(array2, length2);
 
-    if (copy1 == NULL || copy2 == NULL) { // Si no puedo reservar memoria, libero lo que reservé y devuelvo false.
-        free(copy1);
-        free(copy2);
-        return false;
+    // if (copy1 == NULL || copy2 == NULL) { // Si no puedo reservar memoria, libero lo que reservé y devuelvo false.
+    //     free(copy1);
+    //     free(copy2);
+    //     return false;
+    // }
+
+    // bubble_sort( copy1, length1 );
+    // bubble_sort( copy2, length2 );
+
+    // bool result = array_equal( copy1, length1, copy2, length2 );
+
+    // free( copy1 );
+    // free( copy2 );
+
+    int obj, count1, count2;
+
+    for (int i = 0; i < length1; i++) {
+        obj = array1[i];
+        count1 = 0;
+        count2 = 0;
+
+        for (int j = 0; j < length1; j++) {
+            if (array1[j] == obj) count1++;
+            if (array2[j] == obj) count2++;
+        }
+
+        if (count1 != count2) return false;
     }
 
-    bubble_sort( copy1, length1 );
-    bubble_sort( copy2, length2 );
-
-    bool result = array_equal( copy1, length1, copy2, length2 );
-
-    free( copy1 );
-    free( copy2 );
-
-    return result;
+    return true;
 }
