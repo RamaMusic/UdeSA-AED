@@ -166,8 +166,8 @@ bool integer_anagrams(const int *array1, int length1, const int *array2, int len
     free( copy2 );
 
     return result;
-    
-    // Alternativa con menos allocs y a su vez con menor complejidad temporal (O(n^2) vs O(3*n^2):
+
+    // Alternativa con menos allocs y a su vez con menor complejidad temporal (O(n^2) vs O(3*n^2) pero sin codigo repetido:
     //     int obj, count1, count2;
 
     //     for (int i = 0; i < length1; i++) {
