@@ -20,7 +20,7 @@ bool is_prime(int x){
 }
 
 int storage_capacity(float d, float v){
-    if (d == 0 || d / v < 0) { return 0; }
+    if (d == 0 || d / v < 0) return 0;
     return (int) (d / v);
 }
 
@@ -37,7 +37,7 @@ void swap(int *x, int *y) {
 int array_max(const int *array, int length) {
     int max = array[0];
 
-    if (length <= 0) { return 0; }
+    if (length <= 0) return 0;
 
     for (int i = 1; i < length; i++){
         if (array[i] > max){
@@ -48,7 +48,7 @@ int array_max(const int *array, int length) {
 }
 
 void array_map(int *array, int length, int f(int)) {
-    if (f == NULL || array == NULL || length <= 0) { return; } // Si no hay función o el array esta vacío, no hago nada.
+    if (f == NULL || array == NULL || length <= 0) return; // Si no hay función o el array esta vacío, no hago nada.
     for (int i = 0; i < length; i++){
         array[i] = f(array[i]);
     }
@@ -56,10 +56,10 @@ void array_map(int *array, int length, int f(int)) {
 }
 
 int *copy_array(const int *array, int length) {
-    if (array == NULL || length <= 0) { return NULL; } // Si el array esta vacio lo ignoro.
+    if (array == NULL || length <= 0) return NULL; // Si el array esta vacio lo ignoro.
 
     int *copy = malloc(length * sizeof(int));
-    if (copy == NULL) { return NULL; } // Si no puedo reservar memoria, devuelvo NULL.
+    if (copy == NULL) return NULL; // Si no puedo reservar memoria, devuelvo NULL.
 
     for (int i = 0; i < length; i++){
         copy[i] = array[i];
@@ -68,10 +68,10 @@ int *copy_array(const int *array, int length) {
 }
 
 int **copy_array_of_arrays(const int **array_of_arrays, const int *array_lenghts, int array_amount){
-    if (array_of_arrays == NULL || array_lenghts == NULL || array_amount <= 0) { return NULL; } // Si el array esta vacio, no hago nada.
+    if (array_of_arrays == NULL || array_lenghts == NULL || array_amount <= 0) return NULL; // Si el array esta vacio, no hago nada.
 
     int **copy = malloc(array_amount * sizeof(int *));
-    if (copy == NULL) { return NULL; } // Si no puedo reservar memoria, devuelvo NULL.
+    if (copy == NULL) return NULL; // Si no puedo reservar memoria, devuelvo NULL.
 
     for (int i = 0; i < array_amount; i++){
         // Si el array esta vacio, libero la memoria ya reservada y devuelvo NULL.
@@ -148,20 +148,40 @@ bool integer_anagrams(const int *array1, int length1, const int *array2, int len
 
     if (array_equal(array1, length1, array2, length2)) { return true; } // Si los arrays son iguales, son anagramas.
 
-    int obj, count1, count2;
+    int *copy1 = copy_array(array1, length1);
+    int *copy2 = copy_array(array2, length2);
 
-    for (int i = 0; i < length1; i++) {
-        obj = array1[i];
-        count1 = 0;
-        count2 = 0;
-
-        for (int j = 0; j < length1; j++) {
-            if (array1[j] == obj) count1++;
-            if (array2[j] == obj) count2++;
-        }
-
-        if (count1 != count2) return false;
+    if (copy1 == NULL || copy2 == NULL) { // Si no puedo reservar memoria, libero lo que reservé y devuelvo false.
+        free(copy1);
+        free(copy2);
+        return false;
     }
 
-    return true;
+    bubble_sort( copy1, length1 );
+    bubble_sort( copy2, length2 );
+
+    bool result = array_equal( copy1, length1, copy2, length2 );
+
+    free( copy1 );
+    free( copy2 );
+
+    return result;
+    
+    // Alternativa con menos allocs y a su vez con menor complejidad temporal (O(n^2) vs O(3*n^2):
+    //     int obj, count1, count2;
+
+    //     for (int i = 0; i < length1; i++) {
+    //         obj = array1[i];
+    //         count1 = 0;
+    //         count2 = 0;
+
+    //         for (int j = 0; j < length1; j++) {
+    //             if (array1[j] == obj) count1++;
+    //             if (array2[j] == obj) count2++;
+    //         }
+
+    //         if (count1 != count2) return false;
+    //     }
+
+    //     return true;
 }
