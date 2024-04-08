@@ -118,7 +118,11 @@ void *list_pop_tail(list_t *list){
 void list_destroy(list_t *list, void destroy_value(void *)){
     if (list == NULL) return;
 
-    // qué
+    while (!list_is_empty(list)) {
+        void* aux = list_pop_head(list);
+        if (destroy_value) destroy_value(aux);
+    }
+    free(list);
 }
 
 list_iter_t *list_iter_create_head(list_t *list){
