@@ -126,35 +126,69 @@ void list_destroy(list_t *list, void destroy_value(void *)){
 }
 
 list_iter_t *list_iter_create_head(list_t *list){
-    return NULL;
+    if (list == NULL) return NULL;
+    
+    list_iter_t* iterator = malloc(sizeof(list_iter_t));
+    if (iterator == NULL) return NULL;
+
+    iterator->list = list;
+    iterator->curr = list->head;
+
+    return iterator;
 }
 
 list_iter_t *list_iter_create_tail(list_t *list){
-    return NULL;
+    if (list == NULL) return NULL;
+
+    list_iter_t* iterator = malloc(sizeof(list_iter_t));
+    if (iterator == NULL) return NULL;
+
+    iterator->list = list;
+    iterator->curr = list->tail;
+
+    return iterator;
 }
 
 bool list_iter_forward(list_iter_t *iter){
-    return false;
+    if (iter == NULL) return false;
+    
+    if (iter->curr == NULL || iter->curr->next == NULL) return false;
+    iter->curr = iter->curr->next;
+
+    return true;
 }
 
 bool list_iter_backward(list_iter_t *iter){
-    return false;
+    if (iter == NULL) return false;
+    
+    if (iter->curr == NULL || iter->curr->prev == NULL) return false;
+    iter->curr = iter->curr->prev;
+
+    return true;
 }
 
 void *list_iter_peek_current(const list_iter_t *iter){
-    return NULL;
+    if (iter == NULL || iter->curr == NULL) return NULL;
+    return iter->curr->value;
 }
 
 bool list_iter_at_last(const list_iter_t *iter){
-    return false;
+    if (iter == NULL || iter->curr == NULL || iter->list == NULL) return false;
+    if (iter->list->size == 0) return true;
+
+    return (iter->curr == iter->list->tail);
 }
 
 bool list_iter_at_first(const list_iter_t *iter){
-    return false;
+    if (iter == NULL || iter->curr == NULL || iter->list == NULL) return false;
+    if (iter->list->size == 0) return true;
+
+    return (iter->curr == iter->list->head);
 }
 
 void list_iter_destroy(list_iter_t *iter){
-    return;
+    if (iter == NULL) return;
+    free(iter);
 }
 
 bool list_iter_insert_after(list_iter_t *iter, void *value){
