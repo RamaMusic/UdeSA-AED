@@ -192,7 +192,18 @@ void list_iter_destroy(list_iter_t *iter){
 }
 
 bool list_iter_insert_after(list_iter_t *iter, void *value){
-    return false;
+    // if((iter && iter->list  && iter->curr) == NULL) return false;
+    
+    // node_t* node = malloc(sizeof(node_t));
+    // if (node == NULL) return false;
+
+    // node->value = value;
+    // node->prev = iter->curr;
+    // node->next = iter->curr->next;
+
+    // mas tarde lo hago
+
+    return true;
 }
 
 bool list_iter_insert_before(list_iter_t *iter, void *value){
