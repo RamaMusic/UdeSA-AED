@@ -219,38 +219,31 @@ bool list_iter_insert_after(list_iter_t *iter, void *value){
     return true;
 }
 
+
 bool list_iter_insert_before(list_iter_t *iter, void *value){
     if (iter == NULL || iter->list == NULL) return false;
+
+    if (list_is_empty(iter->list)) {
+        bool result = list_insert_head(iter->list, value);
+        iter->curr = iter->list->head;
+        return result;
+    }
+
+    if (list_iter_at_first(iter)) return list_insert_head(iter->list, value);
 
     node_t* node = malloc(sizeof(node_t));
     if (node == NULL) return false;
 
     node->value = value;
+    node->prev = iter->curr->prev;
+    node->next = iter->curr;
 
-    if (iter->curr == NULL) {
-        node->prev = NULL;
-        node->next = NULL;
-
-        iter->list->head = node;
-        iter->list->tail = node;
-        iter->curr = node;
-    } else {
-        node->prev = iter->curr->prev;
-        node->next = iter->curr;
-
-        if (iter->curr->prev != NULL) {
-            iter->curr->prev->next = node;
-        } else {
-            iter->list->head = node;
-        }
-
-        iter->curr->prev = node;
-    }
+    if (node->prev != NULL) iter->curr->prev->next = node; else iter->list->head = node;
+    iter->curr->prev = node;
 
     iter->list->size++;
     return true;
 
-    // falta refactorizarlo y hacerlo lindo
 }
 
 void *list_iter_delete(list_iter_t *iter){
