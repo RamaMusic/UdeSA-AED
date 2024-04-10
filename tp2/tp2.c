@@ -248,6 +248,25 @@ bool list_iter_insert_before(list_iter_t *iter, void *value){
 
 void *list_iter_delete(list_iter_t *iter){
     if (iter == NULL || iter->list == NULL || iter->curr == NULL) return false;
-    return NULL;
-    // falta
+
+    if (list_iter_at_first(iter)) {
+        iter->curr = iter->curr->next;
+        return list_pop_head(iter->list);
+    }
+    if (list_iter_at_last(iter)) {
+        iter->curr = iter->curr->prev;
+        return list_pop_tail(iter->list);
+    }
+
+    void* value = iter->curr->value;
+    node_t* node = iter->curr;
+
+    node->next->prev = node->prev;
+    node->prev->next = node->next;
+
+    iter->curr = node->next;
+    free(node);
+    
+    iter->list->size--;
+    return value;
 }
