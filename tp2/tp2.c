@@ -182,12 +182,12 @@ bool is_iter_at(const list_iter_t *iter, bool head){
     return head ? iter->curr == iter->list->head : iter->curr == iter->list->tail;
 }
 
-bool list_iter_at_last(const list_iter_t *iter){
-    return is_iter_at(iter, false);
-}
-
 bool list_iter_at_first(const list_iter_t *iter){
     return is_iter_at(iter, true);
+}
+
+bool list_iter_at_last(const list_iter_t *iter){
+    return is_iter_at(iter, false);
 }
 
 void list_iter_destroy(list_iter_t *iter){
