@@ -33,8 +33,9 @@ bool list_iter_move(list_iter_t *iter, bool forward);
 
 bool is_iter_at(const list_iter_t *iter, bool head);
 
-// Assignment resolution:
+bool list_iter_insert_at(list_iter_t *iter, void *value, bool after);
 
+// Assignment resolution:
 list_t *list_new(){
     list_t* list = malloc(sizeof(list_t));
     if (list == NULL) return NULL;
@@ -130,55 +131,12 @@ void list_iter_destroy(list_iter_t *iter){
 }
 
 bool list_iter_insert_after(list_iter_t *iter, void *value){
-    if (iter == NULL || iter->list == NULL) return false;
-
-    if (list_is_empty(iter->list)) {
-        bool result = list_insert_head(iter->list, value);
-        iter->curr = iter->list->head;
-        return result;
-    }
-
-    if (list_iter_at_last(iter)) return list_insert_tail(iter->list, value);
-
-    node_t* node = malloc(sizeof(node_t));
-    if (node == NULL) return false;
-
-    node->value = value;
-    node->prev = iter->curr;
-    node->next = iter->curr->next;
-
-    if (node->next == NULL) iter->curr->next->prev = node;
-    iter->curr->next = node;
-
-    iter->list->size++;
-    return true;
+    return list_iter_insert_at(iter, value, true);
 }
 
 
 bool list_iter_insert_before(list_iter_t *iter, void *value){
-    if (iter == NULL || iter->list == NULL) return false;
-
-    if (list_is_empty(iter->list)) {
-        bool result = list_insert_head(iter->list, value);
-        iter->curr = iter->list->head;
-        return result;
-    }
-
-    if (list_iter_at_first(iter)) return list_insert_head(iter->list, value);
-
-    node_t* node = malloc(sizeof(node_t));
-    if (node == NULL) return false;
-
-    node->value = value;
-    node->prev = iter->curr->prev;
-    node->next = iter->curr;
-
-    if (node->prev != NULL) iter->curr->prev->next = node; else iter->list->head = node;
-    iter->curr->prev = node;
-
-    iter->list->size++;
-    return true;
-
+    return list_iter_insert_at(iter, value, false);
 }
 
 void *list_iter_delete(list_iter_t *iter){
@@ -282,7 +240,80 @@ bool list_iter_move(list_iter_t *iter, bool forward){
 
 bool is_iter_at(const list_iter_t *iter, bool head){
     if (iter == NULL || iter->list == NULL) return false;
-    
+
     // I want to compare the nodes, not the values, it can be the same value but not the same node.
-    return head ? iter->curr == iter->list->head : iter->curr == iter->list->tail;
+
+    node_t* node = head ? iter->list->head : iter->list->tail;
+    return node == iter->curr;
 }
+
+bool list_iter_insert_at(list_iter_t *iter, void *value, bool after){
+    if (iter == NULL || iter->list == NULL) return false;
+
+    if (list_is_empty(iter->list)) {
+        bool result = list_insert_head(iter->list, value);
+        iter->curr = iter->list->head;
+        return result;
+    }
+
+    if (after ? list_iter_at_last(iter) : list_iter_at_first(iter)) {
+        return after ? list_insert_tail(iter->list, value) : list_insert_head(iter->list, value);
+    }
+
+    node_t* node = malloc(sizeof(node_t));
+    if (node == NULL) return false;
+
+    node->value = value;
+    node->prev = after ? iter->curr : iter->curr->prev;
+    node->next = after ? iter->curr->next : iter->curr;
+
+    if (after) {
+        if (node->next != NULL) node->next->prev = node;
+        iter->curr->next = node;
+    } else {
+        if (node->prev != NULL) node->prev->next = node; else iter->list->head = node;
+        iter->curr->prev = node;
+    }
+
+    iter->list->size++;
+    return true;
+}
+// preguntar en la tutorial si esta funcion es mejor
+// bool list_iter_insert(list_iter_t *iter, void *value, bool after){
+//     if (iter == NULL || iter->list == NULL) return false;
+
+//     if (list_is_empty(iter->list)) {
+//         bool result = list_insert_head(iter->list, value);
+//         iter->curr = iter->list->head;
+//         return result;
+//     }
+
+//     node_t* node = malloc(sizeof(node_t));
+//     if (node == NULL) return false;
+
+//     node->value = value;
+
+//     if (after) {
+//         if (list_iter_at_last(iter)) {
+//             free(node);
+//             return list_insert_tail(iter->list, value);
+//         }
+//         node->prev = iter->curr;
+//         node->next = iter->curr->next;
+//         if (node->next != NULL) node->next->prev = node;
+//         iter->curr->next = node;
+//     } else {
+//         if (list_iter_at_first(iter)) {
+//             free(node);
+//             return list_insert_head(iter->list, value);
+//         }
+//         node->prev = iter->curr->prev;
+//         node->next = iter->curr;
+//         if (node->prev != NULL) node->prev->next = node;
+//         else iter->list->head = node;
+//         iter->curr->prev = node;
+//     }
+
+//     iter->list->size++;
+//     return true;
+// }
