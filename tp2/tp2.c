@@ -45,39 +45,36 @@ bool list_is_empty(const list_t *list){
     return list_length(list) == 0;
 }
 
-bool list_insert_head(list_t *list, void *value){
+bool list_insert_end(list_t *list, void *value, bool head){
     if (list == NULL) return false;
 
     node_t* node = malloc(sizeof(node_t));
     if (node == NULL) return false;
 
-    node->prev = NULL;
-    node->next = list->head;
     node->value = value;
+    node->next = head ? list->head : NULL;
+    node->prev = head ? NULL : list->tail;
 
-    if (list->head != NULL) list->head->prev = node;
-    if (list->tail == NULL) list->tail = node;
-    list->head = node;
+    if (head) {
+        if (list->head != NULL) list->head->prev = node;
+        if (list->tail == NULL) list->tail = node;
+        list->head = node;
+    } else {
+        if (list->tail != NULL) list->tail->next = node;
+        if (list->head == NULL) list->head = node;
+        list->tail = node;
+    }
+
     list->size++;
-
     return true;
 }
 
+bool list_insert_head(list_t *list, void *value){
+    return list_insert_end(list, value, true);
+}
+
 bool list_insert_tail(list_t *list, void *value){
-    if (list == NULL) return false;
-
-    node_t* node = malloc(sizeof(node_t));
-    if (node == NULL) return false;
-
-    node->value = value;
-    node->next = NULL;
-    node->prev = list->tail;
-
-    if (list->tail != NULL) list->tail->next = node;
-    if (list->head == NULL) list->head = node;
-    list->tail = node;
-    list->size++;
-    return true;
+    return list_insert_end(list, value, false);
 }
 
 void *list_peek_head(const list_t *list){
@@ -93,7 +90,7 @@ void *list_peek_tail(const list_t *list){
 void *list_pop_end(list_t *list, bool head){
     if (list == NULL || list->head == NULL || list->tail == NULL) return NULL;
     // esto es redundante lo de arriba. si head es null tail tambien lo va a ser. preguntar en tuto.
-    
+
     node_t* node = head ? list->head->next : list->tail->prev;
     void* value = head ? list->head->value : list->tail->value;
 
