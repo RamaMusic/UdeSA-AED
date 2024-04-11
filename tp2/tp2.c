@@ -90,34 +90,32 @@ void *list_peek_tail(const list_t *list){
     return list->tail->value;
 }
 
-void *list_pop_head(list_t *list){
-    if (list == NULL || list->head == NULL) return NULL;
+void *list_pop_end(list_t *list, bool head){
+    if (list == NULL || list->head == NULL || list->tail == NULL) return NULL;
+    // esto es redundante lo de arriba. si head es null tail tambien lo va a ser. preguntar en tuto.
+    
+    node_t* node = head ? list->head->next : list->tail->prev;
+    void* value = head ? list->head->value : list->tail->value;
 
-    node_t* node = list->head->next;
-    void* value = list->head->value;
+    if (node != NULL) {
+        if (head) node->prev = NULL; else node->next = NULL;
+    } else {
+        if (head) list->tail = NULL; else list->head = NULL;
+    }
 
-    if (node != NULL) node->prev = NULL; else list->tail = NULL;
-
-    free(list->head);
-    list->head = node;
+    free(head ? list->head : list->tail);
+    if (head) list->head = node; else list->tail = node;
 
     list->size--;
     return value;
 }
 
+void *list_pop_head(list_t *list){
+    return list_pop_end(list, true);
+}
+
 void *list_pop_tail(list_t *list){
-    if (list == NULL || list->tail == NULL) return NULL;
-
-    node_t* node = list->tail->prev;
-    void* value = list->tail->value;
-
-    if (node != NULL) node->next = NULL; else list->head = NULL;
-
-    free(list->tail);
-    list->tail = node;
-
-    list->size--;
-    return value;
+    return list_pop_end(list, false);
 }
 
 void list_destroy(list_t *list, void destroy_value(void *)){
