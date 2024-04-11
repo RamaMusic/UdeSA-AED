@@ -25,20 +25,24 @@ struct list_iter {
 list_t *list_new(){
     list_t* list = malloc(sizeof(list_t));
     if (list == NULL) return NULL;
+
     list->head = NULL;
     list->tail = NULL;
     list->size = 0;
+    
     return list;
 }
 
 size_t list_length(const list_t *list){
     if (list == NULL) return 0;
+
     return list->size;
 }
 
 bool list_is_empty(const list_t *list){
     if (list == NULL) return NULL;
-    return list->size == 0;
+
+    return list_length(list) == 0;
 }
 
 bool list_insert_head(list_t *list, void *value){
@@ -64,6 +68,7 @@ bool list_insert_tail(list_t *list, void *value){
 
     node_t* node = malloc(sizeof(node_t));
     if (node == NULL) return false;
+
     node->value = value;
     node->next = NULL;
     node->prev = list->tail;
@@ -125,56 +130,53 @@ void list_destroy(list_t *list, void destroy_value(void *)){
     free(list);
 }
 
-list_iter_t *list_iter_create_head(list_t *list){
+list_iter_t *create_iter(list_t *list, bool head){
     if (list == NULL) return NULL;
 
     list_iter_t* iterator = malloc(sizeof(list_iter_t));
     if (iterator == NULL) return NULL;
 
     iterator->list = list;
-    iterator->curr = list->head;
+    iterator->curr = head ? list->head : list->tail;
 
     return iterator;
+}
+
+list_iter_t *list_iter_create_head(list_t *list){
+    return create_iter(list, true);
 }
 
 list_iter_t *list_iter_create_tail(list_t *list){
-    if (list == NULL) return NULL;
+    return create_iter(list, false);
+}
 
-    list_iter_t* iterator = malloc(sizeof(list_iter_t));
-    if (iterator == NULL) return NULL;
+bool list_iter_move(list_iter_t *iter, bool forward){
+    if (iter == NULL || iter->curr == NULL) return false;
 
-    iterator->list = list;
-    iterator->curr = list->tail;
+    node_t* next = forward ? iter->curr->next : iter->curr->prev;
 
-    return iterator;
+    if (next == NULL) return false;
+    iter->curr = next;
+
+    return true;
 }
 
 bool list_iter_forward(list_iter_t *iter){
-    if (iter == NULL) return false;
-
-    if (iter->curr == NULL || iter->curr->next == NULL) return false;
-    iter->curr = iter->curr->next;
-
-    return true;
+    return list_iter_move(iter, true);
 }
 
 bool list_iter_backward(list_iter_t *iter){
-    if (iter == NULL) return false;
-
-    if (iter->curr == NULL || iter->curr->prev == NULL) return false;
-    iter->curr = iter->curr->prev;
-
-    return true;
+    return list_iter_move(iter, false);
 }
 
 void *list_iter_peek_current(const list_iter_t *iter){
     if (iter == NULL || iter->curr == NULL) return NULL;
+
     return iter->curr->value;
 }
 
 bool list_iter_at_last(const list_iter_t *iter){
     if (iter == NULL || iter->list == NULL) return false;
-    if (iter->list->size == 0) return true;
 
     return (iter->curr == iter->list->tail);
 }
@@ -190,9 +192,6 @@ void list_iter_destroy(list_iter_t *iter){
     if (iter == NULL) return;
     free(iter);
 }
-
-// bool list_iter_insert_after(list_iter_t *iter, void *value){
-
 
 bool list_iter_insert_after(list_iter_t *iter, void *value){
     if (iter == NULL || iter->list == NULL) return false;
@@ -250,15 +249,15 @@ void *list_iter_delete(list_iter_t *iter){
     if (iter == NULL || iter->list == NULL || iter->curr == NULL) return false;
 
     if (list_iter_at_first(iter)) {
-        iter->curr = iter->curr->next;
+        list_iter_forward(iter);
         return list_pop_head(iter->list);
     }
     if (list_iter_at_last(iter)) {
-        iter->curr = iter->curr->prev;
+        list_iter_backward(iter);
         return list_pop_tail(iter->list);
     }
 
-    void* value = iter->curr->value;
+    void* value = list_iter_peek_current(iter);
     node_t* node = iter->curr;
 
     node->next->prev = node->prev;
