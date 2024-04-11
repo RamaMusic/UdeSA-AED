@@ -171,13 +171,7 @@ void *list_iter_delete(list_iter_t *iter){
      \____\__,_|___/\__\___/|_| |_| |_|   |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
 */
 
-bool list_insert_end(list_t *list, void *value, bool head){
-    if (list == NULL) return false;
-
-    node_t* node = malloc(sizeof(node_t));
-    if (node == NULL) return false;
-
-    node->value = value;
+void insert_node(list_t *list, node_t *node, bool head) {
     node->next = head ? list->head : NULL;
     node->prev = head ? NULL : list->tail;
 
@@ -192,13 +186,9 @@ bool list_insert_end(list_t *list, void *value, bool head){
     }
 
     list->size++;
-    return true;
 }
 
-void *list_pop_end(list_t *list, bool head){
-    if (list == NULL || list->head == NULL || list->tail == NULL) return NULL;
-    // I do not think I need to check if head is null, if head is null tail is null too. Ask in tutorial.
-
+void *remove_node(list_t *list, bool head) {
     node_t* node = head ? list->head->next : list->tail->prev;
     void* value = head ? list->head->value : list->tail->value;
 
@@ -213,6 +203,24 @@ void *list_pop_end(list_t *list, bool head){
 
     list->size--;
     return value;
+}
+
+bool list_insert_end(list_t *list, void *value, bool head){
+    if (list == NULL) return false;
+
+    node_t* node = malloc(sizeof(node_t));
+    if (node == NULL) return false;
+
+    node->value = value;
+    insert_node(list, node, head);
+
+    return true;
+}
+
+void *list_pop_end(list_t *list, bool head){
+    if (list == NULL || list->head == NULL || list->tail == NULL) return NULL;
+
+    return remove_node(list, head);
 }
 
 list_iter_t *create_iter_at_end(list_t *list, bool head){
