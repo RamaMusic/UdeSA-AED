@@ -22,6 +22,19 @@ struct list_iter {
     node_t* curr;
 };
 
+// Declaration of custom functions. Functions are defined at the bottom of the file.
+bool list_insert_end(list_t *list, void *value, bool head);
+
+void *list_pop_end(list_t *list, bool head);
+
+list_iter_t *create_iter_at_end(list_t *list, bool head);
+
+bool list_iter_move(list_iter_t *iter, bool forward);
+
+bool is_iter_at(const list_iter_t *iter, bool head);
+
+// Assignment resolution:
+
 list_t *list_new(){
     list_t* list = malloc(sizeof(list_t));
     if (list == NULL) return NULL;
@@ -45,30 +58,6 @@ bool list_is_empty(const list_t *list){
     return list_length(list) == 0;
 }
 
-bool list_insert_end(list_t *list, void *value, bool head){
-    if (list == NULL) return false;
-
-    node_t* node = malloc(sizeof(node_t));
-    if (node == NULL) return false;
-
-    node->value = value;
-    node->next = head ? list->head : NULL;
-    node->prev = head ? NULL : list->tail;
-
-    if (head) {
-        if (list->head != NULL) list->head->prev = node;
-        if (list->tail == NULL) list->tail = node;
-        list->head = node;
-    } else {
-        if (list->tail != NULL) list->tail->next = node;
-        if (list->head == NULL) list->head = node;
-        list->tail = node;
-    }
-
-    list->size++;
-    return true;
-}
-
 bool list_insert_head(list_t *list, void *value){
     return list_insert_end(list, value, true);
 }
@@ -85,26 +74,6 @@ void *list_peek_head(const list_t *list){
 void *list_peek_tail(const list_t *list){
     if (list == NULL || list->tail == NULL) return NULL;
     return list->tail->value;
-}
-
-void *list_pop_end(list_t *list, bool head){
-    if (list == NULL || list->head == NULL || list->tail == NULL) return NULL;
-    // esto es redundante lo de arriba. si head es null tail tambien lo va a ser. preguntar en tuto.
-
-    node_t* node = head ? list->head->next : list->tail->prev;
-    void* value = head ? list->head->value : list->tail->value;
-
-    if (node != NULL) {
-        if (head) node->prev = NULL; else node->next = NULL;
-    } else {
-        if (head) list->tail = NULL; else list->head = NULL;
-    }
-
-    free(head ? list->head : list->tail);
-    if (head) list->head = node; else list->tail = node;
-
-    list->size--;
-    return value;
 }
 
 void *list_pop_head(list_t *list){
@@ -125,35 +94,12 @@ void list_destroy(list_t *list, void destroy_value(void *)){
     free(list);
 }
 
-list_iter_t *create_iter(list_t *list, bool head){
-    if (list == NULL) return NULL;
-
-    list_iter_t* iterator = malloc(sizeof(list_iter_t));
-    if (iterator == NULL) return NULL;
-
-    iterator->list = list;
-    iterator->curr = head ? list->head : list->tail;
-
-    return iterator;
-}
-
 list_iter_t *list_iter_create_head(list_t *list){
-    return create_iter(list, true);
+    return create_iter_at_end(list, true);
 }
 
 list_iter_t *list_iter_create_tail(list_t *list){
-    return create_iter(list, false);
-}
-
-bool list_iter_move(list_iter_t *iter, bool forward){
-    if (iter == NULL || iter->curr == NULL) return false;
-
-    node_t* next = forward ? iter->curr->next : iter->curr->prev;
-
-    if (next == NULL) return false;
-    iter->curr = next;
-
-    return true;
+    return create_iter_at_end(list, false);
 }
 
 bool list_iter_forward(list_iter_t *iter){
@@ -168,13 +114,6 @@ void *list_iter_peek_current(const list_iter_t *iter){
     if (iter == NULL || iter->curr == NULL) return NULL;
 
     return iter->curr->value;
-}
-
-bool is_iter_at(const list_iter_t *iter, bool head){
-    if (iter == NULL || iter->list == NULL) return false;
-    
-    // Quiero comparar los nodos, no los valores, puede ser el mismo valor pero no ser el mismo nodo.
-    return head ? iter->curr == iter->list->head : iter->curr == iter->list->tail;
 }
 
 bool list_iter_at_first(const list_iter_t *iter){
@@ -265,4 +204,85 @@ void *list_iter_delete(list_iter_t *iter){
     
     iter->list->size--;
     return value;
+}
+
+/*    ____          _                       __                  _   _                 
+     / ___|   _ ___| |_ ___  _ __ ___      / _|_   _ _ __   ___| |_(_) ___  _ __  ___ 
+    | |  | | | / __| __/ _ \| '_ ` _ \    | |_| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+    | |__| |_| \__ \ || (_) | | | | | |   |  _| |_| | | | | (__| |_| | (_) | | | \__ \
+     \____\__,_|___/\__\___/|_| |_| |_|   |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+*/
+
+bool list_insert_end(list_t *list, void *value, bool head){
+    if (list == NULL) return false;
+
+    node_t* node = malloc(sizeof(node_t));
+    if (node == NULL) return false;
+
+    node->value = value;
+    node->next = head ? list->head : NULL;
+    node->prev = head ? NULL : list->tail;
+
+    if (head) {
+        if (list->head != NULL) list->head->prev = node;
+        if (list->tail == NULL) list->tail = node;
+        list->head = node;
+    } else {
+        if (list->tail != NULL) list->tail->next = node;
+        if (list->head == NULL) list->head = node;
+        list->tail = node;
+    }
+
+    list->size++;
+    return true;
+}
+
+void *list_pop_end(list_t *list, bool head){
+    if (list == NULL || list->head == NULL || list->tail == NULL) return NULL;
+    // I do not think I need to check if head is null, if head is null tail is null too. Ask in tutorial.
+
+    node_t* node = head ? list->head->next : list->tail->prev;
+    void* value = head ? list->head->value : list->tail->value;
+
+    if (node != NULL) {
+        if (head) node->prev = NULL; else node->next = NULL;
+    } else {
+        if (head) list->tail = NULL; else list->head = NULL;
+    }
+
+    free(head ? list->head : list->tail);
+    if (head) list->head = node; else list->tail = node;
+
+    list->size--;
+    return value;
+}
+
+list_iter_t *create_iter_at_end(list_t *list, bool head){
+    if (list == NULL) return NULL;
+
+    list_iter_t* iterator = malloc(sizeof(list_iter_t));
+    if (iterator == NULL) return NULL;
+
+    iterator->list = list;
+    iterator->curr = head ? list->head : list->tail;
+
+    return iterator;
+}
+
+bool list_iter_move(list_iter_t *iter, bool forward){
+    if (iter == NULL || iter->curr == NULL) return false;
+
+    node_t* next = forward ? iter->curr->next : iter->curr->prev;
+
+    if (next == NULL) return false;
+    iter->curr = next;
+
+    return true;
+}
+
+bool is_iter_at(const list_iter_t *iter, bool head){
+    if (iter == NULL || iter->list == NULL) return false;
+    
+    // I want to compare the nodes, not the values, it can be the same value but not the same node.
+    return head ? iter->curr == iter->list->head : iter->curr == iter->list->tail;
 }
