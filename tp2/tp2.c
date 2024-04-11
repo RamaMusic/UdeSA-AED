@@ -175,17 +175,19 @@ void *list_iter_peek_current(const list_iter_t *iter){
     return iter->curr->value;
 }
 
-bool list_iter_at_last(const list_iter_t *iter){
+bool is_iter_at(const list_iter_t *iter, bool head){
     if (iter == NULL || iter->list == NULL) return false;
+    
+    // Quiero comparar los nodos, no los valores, puede ser el mismo valor pero no ser el mismo nodo.
+    return head ? iter->curr == iter->list->head : iter->curr == iter->list->tail;
+}
 
-    return (iter->curr == iter->list->tail);
+bool list_iter_at_last(const list_iter_t *iter){
+    return is_iter_at(iter, false);
 }
 
 bool list_iter_at_first(const list_iter_t *iter){
-    if (iter == NULL || iter->list == NULL) return false;
-    if (iter->list->size == 0) return true;
-
-    return (iter->curr == iter->list->head);
+    return is_iter_at(iter, true);
 }
 
 void list_iter_destroy(list_iter_t *iter){
