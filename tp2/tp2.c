@@ -249,8 +249,6 @@ bool list_iter_move(list_iter_t *iter, bool forward){
 bool is_iter_at(const list_iter_t *iter, bool head){
     if (iter == NULL || iter->list == NULL) return false;
 
-    // I want to compare the nodes, not the values, it can be the same value but not the same node.
-
     node_t* node = head ? iter->list->head : iter->list->tail;
     return node == iter->curr;
 }
@@ -286,42 +284,3 @@ bool list_iter_insert_at(list_iter_t *iter, void *value, bool after){
     iter->list->size++;
     return true;
 }
-// preguntar en la tutorial si esta funcion es mejor
-// bool list_iter_insert(list_iter_t *iter, void *value, bool after){
-//     if (iter == NULL || iter->list == NULL) return false;
-
-//     if (list_is_empty(iter->list)) {
-//         bool result = list_insert_head(iter->list, value);
-//         iter->curr = iter->list->head;
-//         return result;
-//     }
-
-//     node_t* node = malloc(sizeof(node_t));
-//     if (node == NULL) return false;
-
-//     node->value = value;
-
-//     if (after) {
-//         if (list_iter_at_last(iter)) {
-//             free(node);
-//             return list_insert_tail(iter->list, value);
-//         }
-//         node->prev = iter->curr;
-//         node->next = iter->curr->next;
-//         if (node->next != NULL) node->next->prev = node;
-//         iter->curr->next = node;
-//     } else {
-//         if (list_iter_at_first(iter)) {
-//             free(node);
-//             return list_insert_head(iter->list, value);
-//         }
-//         node->prev = iter->curr->prev;
-//         node->next = iter->curr;
-//         if (node->prev != NULL) node->prev->next = node;
-//         else iter->list->head = node;
-//         iter->curr->prev = node;
-//     }
-
-//     iter->list->size++;
-//     return true;
-// }
