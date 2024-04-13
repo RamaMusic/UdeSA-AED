@@ -170,4 +170,34 @@ bool list_iter_insert_before(list_iter_t *iter, void *value);
  */
 void *list_iter_delete(list_iter_t *iter);
 
+/*
+    * Inserta un elemento al final o al principio de la lista.
+*/
+bool list_insert_end(list_t *list, void *value, bool head);
+
+/*
+    * Elimina un elemento del final o del principio de la lista y devuelve el puntero al dato que almacenaba.
+*/
+void *list_pop_end(list_t *list, bool head);
+
+/*
+    * Devuelve el puntero al dato que está al final o al principio de la lista.
+*/
+list_iter_t *create_iter_at_end(list_t *list, bool head);
+
+/*
+    * Mueve el iterador hacia adelante o hacia atrás.
+*/
+bool list_iter_move(list_iter_t *iter, bool forward);
+
+/*
+    * Devuelve true si el iterador está en la cabeza o en la cola.
+*/
+bool is_iter_at(const list_iter_t *iter, bool head);
+
+/*
+    * Inserta un elemento antes o después del iterador.
+*/
+bool list_iter_insert_at(list_iter_t *iter, void *value, bool after);
+
 #endif

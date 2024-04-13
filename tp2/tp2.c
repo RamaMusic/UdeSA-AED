@@ -22,20 +22,6 @@ struct list_iter {
     node_t* curr;
 };
 
-// Declaration of custom functions. Functions are defined at the bottom of the file.
-bool list_insert_end(list_t *list, void *value, bool head);
-
-void *list_pop_end(list_t *list, bool head);
-
-list_iter_t *create_iter_at_end(list_t *list, bool head);
-
-bool list_iter_move(list_iter_t *iter, bool forward);
-
-bool is_iter_at(const list_iter_t *iter, bool head);
-
-bool list_iter_insert_at(list_iter_t *iter, void *value, bool after);
-
-// Assignment resolution:
 list_t *list_new(){
     list_t* list = malloc(sizeof(list_t));
     if (list == NULL) return NULL;
