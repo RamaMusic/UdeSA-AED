@@ -157,19 +157,12 @@ void *list_iter_delete(list_iter_t *iter){
      \____\__,_|___/\__\___/|_| |_| |_|   |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
 */
 
-void insert_node(list_t *list, node_t *node, bool head) {
-    node->next = head ? list->head : NULL;
-    node->prev = head ? NULL : list->tail;
+void insert_node(list_t *list, node_t *node, node_t *prev, node_t* next) {
+    node->next = next;
+    node->prev = prev;
 
-    if (head) {
-        if (list->head != NULL) list->head->prev = node;
-        if (list->tail == NULL) list->tail = node;
-        list->head = node;
-    } else {
-        if (list->tail != NULL) list->tail->next = node;
-        if (list->head == NULL) list->head = node;
-        list->tail = node;
-    }
+    if (prev != NULL) prev->next = node; else list->head = node;
+    if (next != NULL) next->prev = node; else list->tail = node;
 
     list->size++;
 }
@@ -197,8 +190,11 @@ bool list_insert_end(list_t *list, void *value, bool head){
     node_t* node = malloc(sizeof(node_t));
     if (node == NULL) return false;
 
+    node_t* prev = head ? NULL : list->tail;
+    node_t* next = head ? list->head : NULL;
+
     node->value = value;
-    insert_node(list, node, head);
+    insert_node(list, node, prev, next);
 
     return true;
 }
