@@ -230,6 +230,7 @@ bool list_iter_move(list_iter_t *iter, bool forward){
 
 bool is_iter_at(const list_iter_t *iter, bool head){
     if (iter == NULL || iter->list == NULL) return false;
+    if (iter->curr == NULL) return true;
 
     node_t* node = head ? iter->list->head : iter->list->tail;
     return node == iter->curr;
@@ -240,7 +241,6 @@ bool list_iter_insert_at(list_iter_t *iter, void *value, bool after){
 
     if (list_is_empty(iter->list)) {
         bool result = list_insert_head(iter->list, value);
-        iter->curr = iter->list->head;
         return result;
     }
 
