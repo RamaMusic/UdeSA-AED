@@ -23,7 +23,7 @@ struct dictionary {
 unsigned long hash(const char *key);
 node *create_entry(const char *key, void *value);
 void free_entry(node *entry, destroy_f destroy);
-void resize_dictionary(dictionary_t *dictionary);
+bool resize_dictionary(dictionary_t *dictionary);
 node *find_entry(dictionary_t *dictionary, const char *key, node **prev);
 
 // Implementación de las funciones principales
@@ -65,7 +65,7 @@ bool dictionary_put(dictionary_t *dictionary, const char *key, void *value) {
     dictionary->size++;
 
     if ((double)dictionary->size > LOAD_FACTOR * (double)dictionary->capacity) {
-        resize_dictionary(dictionary);
+        return resize_dictionary(dictionary);
     }
 
     return true;
@@ -198,9 +198,10 @@ void free_entry(node *entry, destroy_f destroy) {
     }
 };
 
-void resize_dictionary(dictionary_t *dictionary) {
+bool resize_dictionary(dictionary_t *dictionary) {
     size_t new_capacity = dictionary->capacity * 2;
     node **new_container = calloc(new_capacity, sizeof(node *));
+    if (new_container == NULL) return false;
 
     for (size_t i = 0; i < dictionary->capacity; i++) {
         node *entry = dictionary->container[i];
@@ -216,6 +217,8 @@ void resize_dictionary(dictionary_t *dictionary) {
     free(dictionary->container);
     dictionary->container = new_container;
     dictionary->capacity = new_capacity;
+
+    return true;
 }
 
 node *find_entry(dictionary_t *dictionary, const char *key, node **prev) {
