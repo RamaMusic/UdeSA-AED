@@ -26,83 +26,6 @@ void free_entry(node *entry, destroy_f destroy);
 void resize_dictionary(dictionary_t *dictionary);
 node *find_entry(dictionary_t *dictionary, const char *key, node **prev);
 
-// Funciones principales
-dictionary_t *dictionary_create(destroy_f destroy);
-bool dictionary_put(dictionary_t *dictionary, const char *key, void *value);
-void *dictionary_get(dictionary_t *dictionary, const char *key, bool *err);
-bool dictionary_delete(dictionary_t *dictionary, const char *key);
-void *dictionary_pop(dictionary_t *dictionary, const char *key, bool *err);
-bool dictionary_contains(dictionary_t *dictionary, const char *key);
-size_t dictionary_size(dictionary_t *dictionary);
-void dictionary_destroy(dictionary_t *dictionary);
-
-// Implementación de las funciones auxiliares
-unsigned long hash(const char *key) {
-    unsigned long hash = 5381;
-    int c;
-    while ((c = *key++)) hash = ((hash << 5) + hash) + c;
-    return hash;
-};
-
-node *create_entry(const char *key, void *value) {
-    node *entry = malloc(sizeof(node));
-    if (!entry) return NULL;
-
-    entry->key = malloc(strlen(key) + 1);
-    if (!entry->key) {
-        free(entry);
-        return NULL;
-    }
-
-    strcpy(entry->key, key);
-    entry->value = value;
-    entry->next = NULL;
-
-    return entry;
-};
-
-void free_entry(node *entry, destroy_f destroy) {
-    if (entry) {
-        free(entry->key);
-        if (destroy) destroy(entry->value);
-        free(entry);
-    }
-};
-
-void resize_dictionary(dictionary_t *dictionary) {
-    size_t new_capacity = dictionary->capacity * 2;
-    node **new_container = calloc(new_capacity, sizeof(node *));
-
-    for (size_t i = 0; i < dictionary->capacity; i++) {
-        node *entry = dictionary->container[i];
-        while (entry) {
-            size_t new_index = hash(entry->key) % new_capacity;
-            node *next_entry = entry->next;
-            entry->next = new_container[new_index];
-            new_container[new_index] = entry;
-            entry = next_entry;
-        }
-    }
-
-    free(dictionary->container);
-    dictionary->container = new_container;
-    dictionary->capacity = new_capacity;
-}
-
-node *find_entry(dictionary_t *dictionary, const char *key, node **prev) {
-    size_t index = hash(key) % dictionary->capacity;
-    node *entry = dictionary->container[index];
-    *prev = NULL;
-
-    while (entry) {
-        if (strcmp(entry->key, key) == 0) return entry;
-        *prev = entry;
-        entry = entry->next;
-    }
-
-    return NULL;
-}
-
 // Implementación de las funciones principales
 dictionary_t *dictionary_create(destroy_f destroy) {
     dictionary_t *dictionary = malloc(sizeof(dictionary_t));
@@ -241,3 +164,70 @@ void dictionary_destroy(dictionary_t *dictionary) {
     free(dictionary->container);
     free(dictionary);
 };
+
+// Implementación de las funciones auxiliares
+unsigned long hash(const char *key) {
+    unsigned long hash = 5381;
+    int c;
+    while ((c = *key++)) hash = ((hash << 5) + hash) + c;
+    return hash;
+};
+
+node *create_entry(const char *key, void *value) {
+    node *entry = malloc(sizeof(node));
+    if (!entry) return NULL;
+
+    entry->key = malloc(strlen(key) + 1);
+    if (!entry->key) {
+        free(entry);
+        return NULL;
+    }
+
+    strcpy(entry->key, key);
+    entry->value = value;
+    entry->next = NULL;
+
+    return entry;
+};
+
+void free_entry(node *entry, destroy_f destroy) {
+    if (entry) {
+        free(entry->key);
+        if (destroy) destroy(entry->value);
+        free(entry);
+    }
+};
+
+void resize_dictionary(dictionary_t *dictionary) {
+    size_t new_capacity = dictionary->capacity * 2;
+    node **new_container = calloc(new_capacity, sizeof(node *));
+
+    for (size_t i = 0; i < dictionary->capacity; i++) {
+        node *entry = dictionary->container[i];
+        while (entry) {
+            size_t new_index = hash(entry->key) % new_capacity;
+            node *next_entry = entry->next;
+            entry->next = new_container[new_index];
+            new_container[new_index] = entry;
+            entry = next_entry;
+        }
+    }
+
+    free(dictionary->container);
+    dictionary->container = new_container;
+    dictionary->capacity = new_capacity;
+}
+
+node *find_entry(dictionary_t *dictionary, const char *key, node **prev) {
+    size_t index = hash(key) % dictionary->capacity;
+    node *entry = dictionary->container[index];
+    *prev = NULL;
+
+    while (entry) {
+        if (strcmp(entry->key, key) == 0) return entry;
+        *prev = entry;
+        entry = entry->next;
+    }
+
+    return NULL;
+}
