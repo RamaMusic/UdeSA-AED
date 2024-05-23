@@ -19,13 +19,6 @@ struct dictionary {
     destroy_f destroy;
 };
 
-// Funciones auxiliares
-unsigned long hash(const char *key);
-node *create_entry(const char *key, void *value);
-void free_entry(node *entry, destroy_f destroy);
-bool resize_dictionary(dictionary_t *dictionary);
-node *find_entry(dictionary_t *dictionary, const char *key, node **prev);
-
 // Implementación de las funciones principales
 dictionary_t *dictionary_create(destroy_f destroy) {
     dictionary_t *dictionary = malloc(sizeof(dictionary_t));
@@ -146,9 +139,7 @@ bool dictionary_contains(dictionary_t *dictionary, const char *key) {
 };
 
 size_t dictionary_size(dictionary_t *dictionary) {
-    if (!dictionary) return 0;
-
-    return dictionary->size;
+    return dictionary ? dictionary->size : 0;
 }
 
 void dictionary_destroy(dictionary_t *dictionary) {
