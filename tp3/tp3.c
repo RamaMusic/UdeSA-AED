@@ -49,6 +49,7 @@ bool dictionary_put(dictionary_t *dictionary, const char *key, void *value) {
 
     node *prev;
     node *entry = find_entry(dictionary, key, &prev);
+    // Si la clave ya existe, se reemplaza el valor
     if (entry) {
         if (dictionary->destroy && entry->value)
             dictionary->destroy(entry->value);
@@ -64,6 +65,7 @@ bool dictionary_put(dictionary_t *dictionary, const char *key, void *value) {
     dictionary->container[index] = entry;
     dictionary->size++;
 
+    // Si mi tamaño supera el factor de carga, redimensiono al doble
     if ((double)dictionary->size > LOAD_FACTOR * (double)dictionary->capacity) {
         return resize_dictionary(dictionary);
     }
