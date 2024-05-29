@@ -1,283 +1,215 @@
 #include "tp3.h"
-#include <stdlib.h>
-#include <string.h>
 
-// Estructura para un nodo de la tabla hash
-typedef struct node {
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdbool.h>
+
+struct entry {
+    bool is_occupied;
+    bool is_deleted;
     char *key;
     void *value;
-    struct node *next;
-} node_t;
-
-// Estructura para el diccionario
-struct dictionary {
-    destroy_f destroy;
-    size_t size;
-    node_t **buckets;
-    size_t capacity;
 };
 
-// Función auxiliar para crear un nodo
-static node_t *create_node(const char *key, void *value) {
-    node_t *new_node = malloc(sizeof(node_t));
-    if (new_node == NULL) {
-        return NULL;
+struct dictionary {
+    struct entry *table;
+    size_t capacity;
+    size_t size;
+    float growth_threshold;
+    float growth_factor;
+    destroy_f destroy;
+};
+
+static inline uint32_t hash(const char *key, size_t count) {
+    uint32_t h = 0x811c9dc5;
+    for (size_t i = 0; i < count; i++) {
+        h = (h ^ key[i]) * 0x01000193;
     }
-    new_node->key = strcpy(malloc(strlen(key) + 1), key);
-    new_node->value = value;
-    new_node->next = NULL;
-    return new_node;
+    return h;
 }
 
-// Función auxiliar para liberar un nodo
-static void destroy_node(node_t *node, destroy_f destroy) {
-    if (node == NULL) {
-        return;
+static char *copy_string(const char *src) {
+    size_t len = strlen(src) + 1;
+    char *dst = malloc(len);
+    if (dst) {
+        memcpy(dst, src, len);
     }
-    if (destroy != NULL && node->value != NULL) {
-        destroy(node->value);
-    }
-    free(node->key);  // Free the key here
-    free(node);
+    return dst;
 }
 
-// Función auxiliar para buscar un nodo en la lista
-static node_t *find_node(node_t *list, const char *key) {
-    node_t *current = list;
-    while (current != NULL) {
-        if (strcmp(current->key, key) == 0) {
-            return current;
+static struct entry *find_entry_internal(struct dictionary *dictionary, const char *key, bool allocate_if_not_found) {
+    if (!dictionary || !key) return NULL;
+    
+    uint32_t hash_value = hash(key, strlen(key));
+    unsigned long index = hash_value % dictionary->capacity;
+    unsigned long original_index = index;
+    unsigned long i = 1;
+    struct entry *free_entry = NULL;
+
+    while (dictionary->table[index].is_occupied) {
+        if (!dictionary->table[index].is_deleted && strcmp(dictionary->table[index].key, key) == 0) {
+            return &dictionary->table[index];
         }
-        current = current->next;
-    }
-    return NULL;
-}
-
-// Función auxiliar para eliminar un nodo de la lista
-static void remove_node(node_t **list_ptr, const char *key, destroy_f destroy) {
-    node_t *current = *list_ptr;
-    node_t *prev = NULL;
-
-    while (current != NULL) {
-        if (strcmp(current->key, key) == 0) {
-            if (prev == NULL) {
-                *list_ptr = current->next;
-            } else {
-                prev->next = current->next;
-            }
-            destroy_node(current, destroy);
-            return;
+        if (dictionary->table[index].is_deleted && free_entry == NULL) {
+            free_entry = &dictionary->table[index];
         }
-        prev = current;
-        current = current->next;
+        index = (original_index + i * i) % dictionary->capacity;
+        i++;
     }
+
+    return allocate_if_not_found ? (free_entry ? free_entry : &dictionary->table[index]) : NULL;
 }
 
-// Función para crear un nuevo diccionario
-dictionary_t *dictionary_create(destroy_f destroy) {
-    dictionary_t *dict = malloc(sizeof(dictionary_t));
-    if (dict == NULL) {
-        return NULL;
-    }
 
-    dict->destroy = destroy;
-    dict->size = 0;
-    dict->capacity = 10;  // Tamaño inicial de la tabla hash
-    dict->buckets = calloc(dict->capacity, sizeof(node_t *));
-    if (dict->buckets == NULL) {
-        free(dict);
-        return NULL;
-    }
+static bool resize_dictionary(struct dictionary *dictionary) {
+    if (!dictionary) return false;
 
-    return dict;
-}
+    size_t new_capacity = (size_t)((float)dictionary->capacity * dictionary->growth_factor);
+    if (new_capacity <= dictionary->capacity) return false;
 
-// Función hash básica para obtener el índice
-static size_t hash(const char *key, size_t capacity) {
-    size_t hashval = 0;
-    for (size_t i = 0; key[i] != '\0'; i++) {
-        hashval = key[i] + 31 * hashval;
-    }
-    return hashval % capacity;
-}
+    struct entry *new_table = calloc(new_capacity, sizeof(struct entry));
+    if (!new_table) return false;
 
-// Función para redimensionar la tabla hash si es necesario
-static void resize(dictionary_t *dictionary) {
-    size_t new_capacity = dictionary->capacity * 2;
-    node_t **new_buckets = calloc(new_capacity, sizeof(node_t *));
-    if (new_buckets == NULL) {
-        return;
-    }
-
-    // Rehashing de todos los elementos
     for (size_t i = 0; i < dictionary->capacity; i++) {
-        node_t *current = dictionary->buckets[i];
-        while (current != NULL) {
-            node_t *next = current->next;
-            size_t index = hash(current->key, new_capacity);
-            current->next = new_buckets[index];
-            new_buckets[index] = current;
-            current = next;
+        struct entry old_entry = dictionary->table[i];
+        if (old_entry.is_occupied && !old_entry.is_deleted) {
+            uint32_t hash_value = hash(old_entry.key, strlen(old_entry.key));
+            unsigned long index = hash_value % new_capacity;
+            unsigned long original_index = index;
+            unsigned long j = 1;
+            while (new_table[index].is_occupied) {
+                index = (original_index + j * j) % new_capacity;
+                j++;
+            }
+            new_table[index] = old_entry;
         }
     }
 
-    // Liberar la tabla hash anterior
-    free(dictionary->buckets);
-
-    dictionary->buckets = new_buckets;
+    free(dictionary->table);
+    dictionary->table = new_table;
     dictionary->capacity = new_capacity;
+    return true;
 }
 
-// Función para insertar un par clave-valor en el diccionario
-bool dictionary_put(dictionary_t *dictionary, const char *key, void *value) {
-    if (dictionary == NULL || key == NULL) {
-        return false;
+
+struct dictionary *dictionary_create(destroy_f destroy) {
+    struct dictionary *dic = malloc(sizeof(struct dictionary));
+    if (!dic) return NULL;
+
+    dic->capacity = 256;
+    dic->size = 0;
+    dic->growth_threshold = 0.75;
+    dic->growth_factor = 2.0;
+    dic->destroy = destroy;
+
+    dic->table = calloc(dic->capacity, sizeof(struct entry));
+    if (!dic->table) {
+        free(dic);
+        return NULL;
     }
 
-    // Obtener el índice usando la función hash
-    size_t index = hash(key, dictionary->capacity);
+    return dic;
+}
 
-    // Buscar si la clave ya existe
-    node_t *existing_node = find_node(dictionary->buckets[index], key);
-    if (existing_node != NULL) {
-        // Si la clave existe, eliminar el valor actual
-        if (dictionary->destroy != NULL && existing_node->value != NULL) {
-            dictionary->destroy(existing_node->value);
-        }
-        existing_node->value = value;
-        return true;
+bool dictionary_put(struct dictionary *dictionary, const char *key, void *value) {
+    if (!dictionary || !key || !dictionary->capacity) return false;
+
+    if (dictionary->size >= (size_t)((double)dictionary->capacity * dictionary->growth_threshold)) {
+        if (!resize_dictionary(dictionary)) return false;
     }
 
-    // Crear un nuevo nodo
-    node_t *new_node = create_node(key, value);
-    if (new_node == NULL) {
-        return false;
+    struct entry *entry = find_entry_internal(dictionary, key, true);
+    if (!entry) return false;
+
+    if (!entry->is_occupied || entry->is_deleted) {
+        char *new_key = copy_string(key);
+        if (!new_key) return false;
+
+        entry->key = new_key;
+        entry->is_occupied = true;
+        entry->is_deleted = false;
+        dictionary->size++;
+    } else if (dictionary->destroy) {
+        dictionary->destroy(entry->value);
     }
 
-    // Insertar el nuevo nodo al inicio de la lista
-    new_node->next = dictionary->buckets[index];
-    dictionary->buckets[index] = new_node;
-    dictionary->size++;
+    entry->value = value;
+    return true;
+}
 
-    // Redimensionar si la carga excede cierto factor de carga (ej. 0.75)
-    if ((double) dictionary->size / (double) dictionary->capacity >= 0.75) {
-        resize(dictionary);
+void *dictionary_get(struct dictionary *dictionary, const char *key, bool *err) {
+    if (!dictionary || !key || !dictionary->capacity) {
+        if (err) *err = true;
+        return NULL;
+    }
+
+    struct entry *entry = find_entry_internal(dictionary, key, false);
+    if (!entry || entry->is_deleted) {
+        if (err) *err = true;
+        return NULL;
+    }
+
+    if (err) *err = false;
+    return entry->value;
+}
+
+bool dictionary_delete(struct dictionary *dictionary, const char *key) {
+    if (!dictionary || !key || !dictionary->capacity) return false;
+
+    bool err;
+    void *value = dictionary_pop(dictionary, key, &err);
+    if (err) return false;
+
+    if (dictionary->destroy) {
+        dictionary->destroy(value);
     }
 
     return true;
 }
 
-// Función para obtener un valor del diccionario desde su clave
-void *dictionary_get(dictionary_t *dictionary, const char *key, bool *err) {
-    if (dictionary == NULL || key == NULL || err == NULL) {
-        if (err != NULL) {
-            *err = true;
-        }
+void *dictionary_pop(struct dictionary *dictionary, const char *key, bool *err) {
+    if (!dictionary || !key || !dictionary->capacity) {
+        if (err) *err = true;
         return NULL;
     }
 
-    // Obtener el índice usando la función hash
-    size_t index = hash(key, dictionary->capacity);
-
-    // Buscar el nodo en la lista correspondiente
-    node_t *node = find_node(dictionary->buckets[index], key);
-    if (node == NULL) {
-        *err = true;
+    struct entry *entry = find_entry_internal(dictionary, key, false);
+    if (!entry || !entry->is_occupied || entry->is_deleted) {
+        if (err) *err = true;
         return NULL;
     }
 
-    *err = false;
-    return node->value;
-}
-
-// Función para eliminar una clave del diccionario
-bool dictionary_delete(dictionary_t *dictionary, const char *key) {
-    if (dictionary == NULL || key == NULL) {
-        return false;
-    }
-
-    // Obtener el índice usando la función hash
-    size_t index = hash(key, dictionary->capacity);
-
-    // Buscar y eliminar el nodo de la lista
-    remove_node(&dictionary->buckets[index], key, dictionary->destroy);
+    void *value = entry->value;
+    free(entry->key);
+    entry->is_deleted = true;
     dictionary->size--;
-
-    return true;
-}
-
-// Función para eliminar una clave y retornar su valor asociado
-void *dictionary_pop(dictionary_t *dictionary, const char *key, bool *err) {
-    if (dictionary == NULL || key == NULL || err == NULL) {
-        if (err != NULL) {
-            *err = true;
-        }
-        return NULL;
-    }
-
-    // Obtener el índice usando la función hash
-    size_t index = hash(key, dictionary->capacity);
-
-    // Buscar y eliminar el nodo de la lista
-    node_t *node = find_node(dictionary->buckets[index], key);
-    if (node == NULL) {
-        *err = true;
-        return NULL;
-    }
-
-    // Remover el nodo de la lista
-    if (node == dictionary->buckets[index]) {
-        dictionary->buckets[index] = node->next;
-    } else {
-        remove_node(&dictionary->buckets[index], key, dictionary->destroy);
-    }
-    void *value = node->value;
-    free(node->key);
-    free(node);
-    dictionary->size--;
-    *err = false;
+    if (err) *err = false;
     return value;
 }
 
-// Función para verificar si una clave está presente en el diccionario
-bool dictionary_contains(dictionary_t *dictionary, const char *key) {
-    if (dictionary == NULL || key == NULL) {
-        return false;
-    }
-
-    // Obtener el índice usando la función hash
-    size_t index = hash(key, dictionary->capacity);
-
-    // Buscar si la clave existe en la lista correspondiente
-    return find_node(dictionary->buckets[index], key) != NULL;
+bool dictionary_contains(struct dictionary *dictionary, const char *key) {
+    if (!dictionary || !key) return false;
+    struct entry *entry = find_entry_internal(dictionary, key, false);
+    return entry != NULL && entry->is_occupied && !entry->is_deleted;
 }
 
-// Función para obtener la cantidad de elementos en el diccionario
-size_t dictionary_size(dictionary_t *dictionary) {
-    if (dictionary == NULL) {
-        return 0;
-    }
-
+size_t dictionary_size(struct dictionary *dictionary) {
+    if (!dictionary) return 0;
     return dictionary->size;
 }
 
-// Función para destruir el diccionario y liberar la memoria
-void dictionary_destroy(dictionary_t *dictionary) {
-    if (dictionary == NULL) {
-        return;
-    }
+void dictionary_destroy(struct dictionary *dictionary) {
+    if (!dictionary) return;
 
-    // Liberar todos los nodos de la tabla hash
     for (size_t i = 0; i < dictionary->capacity; i++) {
-        node_t *current = dictionary->buckets[i];
-        while (current != NULL) {
-            node_t *next = current->next;
-            destroy_node(current, dictionary->destroy);
-            current = next;
+        if (dictionary->table[i].is_occupied && !dictionary->table[i].is_deleted) {
+            if (dictionary->destroy) {
+                dictionary->destroy(dictionary->table[i].value);
+            }
+            free(dictionary->table[i].key);
         }
     }
-
-    // Liberar la tabla hash y la estructura del diccionario
-    free(dictionary->buckets);
+    free(dictionary->table);
     free(dictionary);
 }

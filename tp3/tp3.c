@@ -84,21 +84,14 @@ void *dictionary_get(dictionary_t *dictionary, const char *key, bool *err) {
 };
 
 bool dictionary_delete(dictionary_t *dictionary, const char *key) {
-    if (!dictionary || !key || strlen(key) == 0) return false;
+    bool err;
+    void *value = dictionary_pop(dictionary, key, &err);
+    if (err) return false;
 
-    node *prev;
-    node *entry = find_entry(dictionary, key, &prev);
-    if (!entry) return false;
-
-    if (prev) {
-        prev->next = entry->next;
-    } else {
-        size_t index = hash(key) % dictionary->capacity;
-        dictionary->container[index] = entry->next;
+    if (dictionary->destroy) {
+        dictionary->destroy(value);
     }
 
-    free_entry(entry, dictionary->destroy);
-    dictionary->size--;
     return true;
 };
 
