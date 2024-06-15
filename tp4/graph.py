@@ -1,6 +1,9 @@
 from typing import Optional, Any, List
 import numpy as np
 
+from collections import deque
+import time
+
 class Graph:
     """
     Graph class
@@ -143,4 +146,87 @@ class Graph:
         wcc = self.getWCC()
         return len(wcc)
     
-    # def bfs
+    def bfs(self, start) -> dict:
+        """
+        Breadth First Search.
+        
+        Args:
+            start: the starting vertex
+        
+        Returns:
+            the distances from the starting vertex to all other vertices
+        """
+
+        distances = {v: float('inf') for v in self._graph}
+        distances[start] = 0
+        
+        parents = {v: None for v in self._graph}
+        
+        q = deque([start])
+        
+        while q:
+            vertex = q.popleft()
+            for neighbor in self.get_neighbors(vertex):
+                if distances[neighbor] == float('inf'):
+                    distances[neighbor] = distances[vertex] + 1
+                    parents[neighbor] = vertex
+                    q.append(neighbor)
+                    
+        return distances, parents
+    
+    def estimateTimeForShortestPaths(self, n_samples, seed) -> float:
+        """
+        Estimate the time for all shortest paths
+        
+        Args:
+            n_samples: the number of samples
+            seed: the seed for the random generator
+            
+        Returns:
+            the estimated time
+        """
+        
+        np.random.seed(seed)
+        samples = np.random.choice(list(self._graph.keys()), n_samples)
+        
+        times = []
+        for node in samples:
+            start = time.time()
+            self.bfs(node)
+            end = time.time()
+            times.append(end - start)
+
+        avg_time = np.mean(times)
+        
+        return avg_time * len(self._graph)
+    
+    def getNumberOfTrianglesUndirected(self) -> int:
+        """
+        Get the number of triangles in the graph.
+        """
+        undirected_graph = self.create_undirected_graph()
+        triangles = 0
+        for vertex in undirected_graph._graph:
+            neighbors = set(undirected_graph.get_neighbors(vertex))
+            for neighbor in neighbors:
+                if neighbor > vertex:  # Ensure we only count each triangle once
+                    mutual_neighbors = neighbors.intersection(set(undirected_graph.get_neighbors(neighbor)))
+                    for mutual_neighbor in mutual_neighbors:
+                        if mutual_neighbor > neighbor:  # Avoid counting the same triangle from different vertices
+                            triangles += 1
+        return triangles
+    
+    
+    def getNumberOfTrianglesDirected(self) -> int:
+        """
+        Get the number of triangles in the directed graph.
+        """
+        triangles = 0
+        for vertex in self._graph:
+            out_neighbors = set(self.get_neighbors(vertex))
+            for out_neighbor in out_neighbors:
+                mutual_out_neighbors = out_neighbors.intersection(set(self.get_neighbors(out_neighbor)))
+                for mutual_out_neighbor in mutual_out_neighbors:
+                    if vertex in self.get_neighbors(mutual_out_neighbor):  # Check if there's a path back to vertex
+                        triangles += 1
+        return triangles // 3  # Each triangle is counted three times, once at each vertex
