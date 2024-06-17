@@ -1,8 +1,9 @@
 from typing import Optional, Any, List
-import numpy as np
 
 from collections import deque
+import numpy as np
 import time
+from tqdm import tqdm
 
 class Graph:
     """
@@ -112,7 +113,7 @@ class Graph:
         undirected_graph = self.create_undirected_graph()
         visited = {vertex: False for vertex in undirected_graph._graph}
         wcc = []
-        for vertex in undirected_graph._graph:
+        for vertex in tqdm(undirected_graph._graph):  # Step 2: Wrap with tqdm
             if not visited[vertex]:
                 wcc.append(self.isWCC(vertex, visited, undirected_graph))
         return wcc
@@ -131,20 +132,21 @@ class Graph:
                 stack.extend(undirected_graph.get_neighbors(vertex))
         return wcc
     
-    def getBiggestWCC(self, onlyLenght = True) -> int:
+    def getBiggestWCC(self, onlyLenght = True, wcc: dict = None) -> int:
         """
         Get the biggest weakly connected component.
         If onlyLenght is True, return the length of the biggest WCC
         """
-        wcc = self.getWCC()
+        if not wcc:
+            wcc = self.getWCC()
         return max(wcc, key=len) if not onlyLenght else len(max(wcc, key=len))
     
-    def getNumberOfWCC(self) -> int:
+    def getNumberOfWCC(self, returnDict: bool = False) -> int:
         """
         Get the number of weakly connected components
         """
         wcc = self.getWCC()
-        return len(wcc)
+        return len(wcc) if not returnDict else len(wcc), wcc
     
     def bfs(self, start) -> dict:
         """
@@ -188,16 +190,16 @@ class Graph:
         
         np.random.seed(seed)
         samples = np.random.choice(list(self._graph.keys()), n_samples)
-        
+
         times = []
-        for node in samples:
+        for node in tqdm(samples):  # Step 2: Wrap with tqdm
             start = time.time()
             self.bfs(node)
             end = time.time()
             times.append(end - start)
 
         avg_time = np.mean(times)
-        
+
         return avg_time * len(self._graph)
     
     def getNumberOfTrianglesUndirected(self) -> int:
@@ -209,7 +211,7 @@ class Graph:
         """
         undirected_graph = self.create_undirected_graph()
         triangles = 0
-        for vertex in undirected_graph._graph:
+        for vertex in tqdm(undirected_graph._graph):  # Step 2: Wrap with tqdm
             neighbors = sorted(list(undirected_graph.get_neighbors(vertex)))
             for i, neighbor in enumerate(neighbors):
                 if neighbor > vertex:
@@ -217,7 +219,6 @@ class Graph:
                     for mutual_neighbor in mutual_neighbors.intersection(undirected_graph.get_neighbors(neighbor)):
                         triangles += 1
         return triangles
-    
     
     def getNumberOfTrianglesDirected(self) -> int:
         """
@@ -227,11 +228,58 @@ class Graph:
             The number of triangles in the graph.
         """
         triangles = 0
-        for vertex in self._graph:
+        for vertex in tqdm(self._graph): 
             neighbors = self.get_neighbors(vertex)
             for neighbor in neighbors:
                 mutual_neighbors = self.get_neighbors(neighbor)
                 for mutual_neighbor in mutual_neighbors:
-                    if vertex in self.get_neighbors(mutual_neighbor):  # Check if there's a direct path back to vertex
+                    if vertex in self.get_neighbors(mutual_neighbor):
                         triangles += 1
-        return triangles // 3  # Each triangle is counted three times, once for each vertex in the cycle
+        return triangles // 3  # Cada triángulo se cuenta 3 veces, una por cada vértice
+    
+    def findLongestPathBetween(self, start, end) -> List[str]:
+        """
+        Find the longest path between two vertices
+        
+        Args:
+            start: the starting vertex
+            end: the ending vertex
+            
+        Returns:
+            the longest path between the two vertices
+        """
+        distances, parents = self.bfs(start)
+        if distances[end] == float('inf'):
+            return []
+        
+        path = [end]
+        while path[-1] != start:
+            path.append(parents[path[-1]])
+        return path[::-1]
+    
+
+    def estimateGraphDiameter(self, n_samples, seed) -> int:
+        """
+        Estimate the diameter of the graph
+        
+        Args:
+            n_samples: the number of samples
+            seed: the seed for the random generator
+            
+        Returns:
+            the estimated diameter of the graph
+        """
+        np.random.seed(seed)
+        
+        lengths = []
+        
+        with tqdm(total=n_samples) as pbar: 
+            while len(lengths) < n_samples:
+                samples = np.random.choice(list(self._graph.keys()), 2)
+                path = self.findLongestPathBetween(samples[0], samples[1])
+                if path:
+                    lengths.append(len(path))
+                    pbar.update(1)
+        
+        return max(lengths)
+            

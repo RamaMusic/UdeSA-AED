@@ -1,49 +1,58 @@
 from graph import Graph
 import time as casio
 
+from tqdm import tqdm
+
 def readGraph() -> Graph:
     """
     Reads the web-Google.txt file and returns a Graph object
     """
     page_graph = Graph()
     print("Reading web-Google.txt...")
-    with open('web-Google.txt', 'r') as file:
+    total_lines = 5105044  # Accurate total number of lines in the file
+    with open('tp4/web-Google.txt', 'r') as file:
+        # Skip initial comment lines
         for l in file:
-            if "# FromNodeId	ToNodeId" in l:
+            if l.startswith("#"):
+                total_lines -= 1  # Adjust total_lines for each comment line skipped
+            else:
                 break
-        for l in file:
-            if not l:
-                break
-            edge = tuple(int(v.replace("\n", "").replace("\t", "")) for v in l.split("\t"))
-            for v in edge:
-                if not page_graph.vertex_exists(v):
-                    page_graph.add_vertex(str(v))
-            page_graph.add_edge(str(edge[0]), str(edge[1]))
+
+        for l in tqdm(file, initial=1, total=total_lines):
+            if l.startswith("#"):
+                continue  # Skip any additional comment lines
+            parts = l.strip().split("\t")
+            if len(parts) == 2:
+                source, target = parts
+                if not page_graph.vertex_exists(source):
+                    page_graph.add_vertex(source)
+                if not page_graph.vertex_exists(target):
+                    page_graph.add_vertex(target)
+                page_graph.add_edge(source, target)
     print("Finished reading web-Google.txt")
     return page_graph
 
-def processTime(start, end):
+def processTime(start, end, message="Time elapsed: "):
     # Create a function that prints the hours or minutes only if they are greater than 0, and the seconds always with 2 decimal places
     hours, remainder = divmod(end - start, 3600)
     minutes, seconds = divmod(remainder, 60)
     seconds = round(seconds, 2)
     if hours > 0: # Espero que esto nunca se cumpla
-        print(f"Time elapsed: {hours:.0f}h {minutes:.0f}m {seconds}s")
+        print(message + f"{hours:.0f}h {minutes:.0f}m {seconds}s")
     elif minutes > 0:
-        print(f"Time elapsed: {minutes:.0f}m {seconds}s")
+        print(message + f"{minutes:.0f}m {seconds}s")
     else:
-        print(f"Time elapsed: {seconds}s")
+        print(message + f"{seconds}s")
 
-
-def act1(page_graph):
+def act1(page_graph: Graph):
     print("--------------------")
     print("         P1         ")
     print("--------------------")
     start = casio.time()
     
     print("Calculating number of weakly connected components and size of the biggest weakly connected component...")
-    number_of_wcc = page_graph.getNumberOfWCC()
-    biggest_wcc_size = page_graph.getBiggestWCC()
+    number_of_wcc, wcc_dict = page_graph.getNumberOfWCC()
+    biggest_wcc_size = page_graph.getBiggestWCC(wcc=wcc_dict)
 
     print(f"Number of weakly connected components: {number_of_wcc}")
     print(f"Size of the biggest weakly connected component: {biggest_wcc_size}")
@@ -51,12 +60,12 @@ def act1(page_graph):
     end = casio.time()
     
     processTime(start, end)
-    
+    print()
     # Los resultados son: 
     # Number of weakly connected components: 2746 
     # Size of the biggest weakly connected component: 855802
 
-def act2(page_graph):
+def act2(page_graph: Graph):
     # Como mi grafo tiene 875713 vertices, no puedo calcular el tiempo que me llevaría recorrer todos los caminos mínimos; pero puedo tomar una muestra de tamaño N y calcular el promedio de los caminos mínimos de esa muestra, después multiplicar ese promedio por el total de caminos mínimos posibles para obtener una estimación del tiempo que me llevaría recorrer todos los caminos.
     
     print("--------------------")
@@ -65,19 +74,16 @@ def act2(page_graph):
     
     start = casio.time()
     
-    n_samples = 100
-    samples_seed = 42
-    print(f"Estimating time for all shortest paths with {n_samples} samples and seed {samples_seed}...")
-    time = page_graph.estimateTimeForShortestPaths(n_samples, samples_seed)
-    hours, remainder = divmod(time, 3600)
-    minutes, seconds = divmod(remainder, 60)
-    seconds = round(seconds, 2)
-    print(f"Estimated time: {hours}h {minutes}m {seconds}s")
+    n = 100
+    seed = 42
+    print(f"Estimating time for all shortest paths with {n} samples and seed {seed}...")
+    time = page_graph.estimateTimeForShortestPaths(n, seed)
+    processTime(0, time, "Estimated time: ")
     
     end = casio.time()
     
     processTime(start, end)
-    
+    print()    
     # El resultado es: 
     # Estimated time: 328.0h 43.0m 20.89s
     
@@ -100,12 +106,39 @@ def act3(page_graph: Graph, undirected = False):
     end = casio.time()
     
     processTime(start, end)
-    
+    print()    
     # Results:
     # Number of triangles using a Directed Graph: 3,889,771
     # Number of triangles using an Undirected Graph: 13,391,903
+    
+def act4():
+    print("--------------------")
+    print("         P4         ")
+    print("--------------------")
+    
+    # Acá nuevamente no puedo calcular el diámetro del grafo, pero puedo tomar una muestra de tamaño N y calcular el diámetro de esa muestra. Esto es porque calcular el diámetro me implicaría hacer un recorrido de todos los caminos mínimos, lo cual es imposible en un grafo de tantos vértices a no ser que quiera malgastar 300 horas.
+    
+    start = casio.time()
+    
+    n = 100
+    seed = 42
+    
+    print(f"Estimating the diameter of the graph with {n} samples of 2 nodes and seed {seed}...")
+    
+    diameter = page_graph.estimateGraphDiameter(n, seed)
+    print(f"Estimated diameter of the graph: {diameter}")
+    
+    end = casio.time()
+    
+    processTime(start, end)
+    print()    
+    # Estimating the diameter of the graph with 100 samples and seed 42...
+    # Estimated diameter of the graph: 21
+    # Time elapsed: 4m 33.39s
+    
 if __name__ == "__main__":
     page_graph = readGraph()
-    # act1(page_graph)
-    # act2(page_graph)
-    # act3(page_graph, undirected=False)
+    act1(page_graph)
+    act2(page_graph)
+    act3(page_graph, undirected=True)
+    act4()
