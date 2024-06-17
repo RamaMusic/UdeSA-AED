@@ -176,7 +176,7 @@ class Graph:
                     
         return distances, parents
     
-    def estimateTimeForShortestPaths(self, n_samples, seed) -> float:
+    def estimateTimeForShortestPaths(self, n_samples, seed = None) -> float:
         """
         Estimate the time for all shortest paths
         
@@ -187,8 +187,9 @@ class Graph:
         Returns:
             the estimated time
         """
+        if seed:
+            np.random.seed(seed)
         
-        np.random.seed(seed)
         samples = np.random.choice(list(self._graph.keys()), n_samples)
 
         times = []
@@ -258,7 +259,7 @@ class Graph:
         return path[::-1]
     
 
-    def estimateGraphDiameter(self, n_samples, seed) -> int:
+    def estimateGraphDiameter(self, n_samples, seed = None) -> int:
         """
         Estimate the diameter of the graph
         
@@ -269,7 +270,8 @@ class Graph:
         Returns:
             the estimated diameter of the graph
         """
-        np.random.seed(seed)
+        if seed:
+            np.random.seed(seed)
         
         lengths = []
         
@@ -282,4 +284,80 @@ class Graph:
                     pbar.update(1)
         
         return max(lengths)
+    
+    def transposeGraph(self) -> 'Graph':
+        """
+        Transpose the graph
+        """
+        transposed = Graph()
+        for vertex in self._graph:
+            transposed.add_vertex(vertex, self._graph[vertex]['data'])
+        for vertex in self._graph:
+            for neighbor in self._graph[vertex]['neighbors']:
+                transposed.add_edge(neighbor, vertex, self._graph[vertex]['neighbors'][neighbor])
+        return transposed
+    
+    def getTopPageRankVertices(self, top_n: int, iters = 100, tol = 1e-6, damping = 0.85) -> List[str]:
+        """
+        Shows the top N vertices with the highest PageRank
+        
+        Args:
+            top_n: the number of vertices to show
+            iters: the number of iterations
+            tol: the tolerance
+            damping: the damping factor
             
+        Returns:
+            the top N vertices with the highest PageRank
+        """
+        
+        page_rank = self.pageRank(damping, tol, iters)
+        
+        shorted = sorted(page_rank, key=page_rank.get, reverse=True)[:top_n]
+        
+        string = ""
+        
+        string += "Top vertices with the highest PageRank:\n"
+        for vertex in shorted:
+            string += f"Vertex: {vertex}, PageRank: {page_rank[vertex]}\n"
+        
+        return string
+    
+    def pageRank(self, damping=0.85, tol=1e-6, iters=100) -> dict:
+        """
+        PageRank algorithm
+        
+        Args:
+            damping: the damping factor
+            tol: the tolerance
+            iters: the number of iterations
+            
+        Returns:
+            the PageRank of the vertices
+        """
+        transposed = self.transposeGraph()
+        n = len(self._graph)
+        
+        page_rank = {vertex: 1/n for vertex in self._graph}
+        
+        n_neighbors = {vertex: len(self.get_neighbors(vertex)) for vertex in self._graph}
+        pointingToMe = {vertex: transposed.get_neighbors(vertex) for vertex in self._graph}
+        
+        for iteration in tqdm(range(1, iters + 1)):
+            new_page_rank = {}
+            for vertex in self._graph:
+                rank = 0
+                for neighbor in pointingToMe[vertex]:
+                    rank += page_rank[neighbor] / n_neighbors[neighbor]
+                new_page_rank[vertex] = (1 - damping) / n + damping * rank
+                
+            # Check convergence
+            diff = sum(abs(new_page_rank[vertex] - page_rank[vertex]) for vertex in self._graph)
+            if diff < tol:
+                break
+            
+            page_rank = new_page_rank
+            
+        print(f"Converged after {iteration} iterations, aborting...")
+            
+        return page_rank

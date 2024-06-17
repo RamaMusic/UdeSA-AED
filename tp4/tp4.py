@@ -76,8 +76,9 @@ def act2(page_graph: Graph):
     
     n = 100
     seed = 42
+    
     print(f"Estimating time for all shortest paths with {n} samples and seed {seed}...")
-    time = page_graph.estimateTimeForShortestPaths(n, seed)
+    time = page_graph.estimateTimeForShortestPaths(n)
     processTime(0, time, "Estimated time: ")
     
     end = casio.time()
@@ -111,7 +112,7 @@ def act3(page_graph: Graph, undirected = False):
     # Number of triangles using a Directed Graph: 3,889,771
     # Number of triangles using an Undirected Graph: 13,391,903
     
-def act4():
+def act4(page_graph: Graph):
     print("--------------------")
     print("         P4         ")
     print("--------------------")
@@ -125,7 +126,7 @@ def act4():
     
     print(f"Estimating the diameter of the graph with {n} samples of 2 nodes and seed {seed}...")
     
-    diameter = page_graph.estimateGraphDiameter(n, seed)
+    diameter = page_graph.estimateGraphDiameter(n)
     print(f"Estimated diameter of the graph: {diameter}")
     
     end = casio.time()
@@ -136,9 +137,44 @@ def act4():
     # Estimated diameter of the graph: 21
     # Time elapsed: 4m 33.39s
     
+def act5(page_graph: Graph):
+    print("--------------------")
+    print("         P5         ")
+    print("--------------------")
+    
+    # Calculo el pageRank de los 10 primeros vértices
+    start = casio.time()
+    
+    n = 10
+    
+    print(f"Finding the top {n} vertices with the highest PageRank...")
+    
+    print(page_graph.getTopPageRankVertices(n))
+    end = casio.time()
+    
+    processTime(start, end)
+    print() 
+    
+    # Results
+    # Converged after 61 iterations, aborting...
+    # Top vertices with the highest PageRank:
+    # Vertex: 597621, PageRank: 0.000644356692909492
+    # Vertex: 41909, PageRank: 0.0006425477256693725
+    # Vertex: 163075, PageRank: 0.0006305999262383353
+    # Vertex: 537039, PageRank: 0.0006269920571772538
+    # Vertex: 384666, PageRank: 0.0005489073817720516
+    # Vertex: 504140, PageRank: 0.0005337169626427533
+    # Vertex: 486980, PageRank: 0.000505691228595806
+    # Vertex: 605856, PageRank: 0.0005008187129537594
+    # Vertex: 32163, PageRank: 0.0004970646588593843
+    # Vertex: 558791, PageRank: 0.0004947016865199656
+
+    # Time elapsed: 2m 8.08s
+    
 if __name__ == "__main__":
     page_graph = readGraph()
-    act1(page_graph)
-    act2(page_graph)
-    act3(page_graph, undirected=True)
-    act4()
+    # act1(page_graph)
+    # act2(page_graph)
+    # act3(page_graph, undirected=False)
+    # act4(page_graph)
+    act5(page_graph)
