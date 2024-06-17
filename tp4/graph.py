@@ -202,31 +202,36 @@ class Graph:
     
     def getNumberOfTrianglesUndirected(self) -> int:
         """
-        Get the number of triangles in the graph.
+        Get the number of triangles in the undirected graph.
+        
+        Returns:
+            The number of triangles in the undirected graph.
         """
         undirected_graph = self.create_undirected_graph()
         triangles = 0
         for vertex in undirected_graph._graph:
-            neighbors = set(undirected_graph.get_neighbors(vertex))
-            for neighbor in neighbors:
-                if neighbor > vertex:  # Ensure we only count each triangle once
-                    mutual_neighbors = neighbors.intersection(set(undirected_graph.get_neighbors(neighbor)))
-                    for mutual_neighbor in mutual_neighbors:
-                        if mutual_neighbor > neighbor:  # Avoid counting the same triangle from different vertices
-                            triangles += 1
+            neighbors = sorted(list(undirected_graph.get_neighbors(vertex)))
+            for i, neighbor in enumerate(neighbors):
+                if neighbor > vertex:
+                    mutual_neighbors = set(neighbors[i+1:])  # Only consider neighbors greater than the current neighbor
+                    for mutual_neighbor in mutual_neighbors.intersection(undirected_graph.get_neighbors(neighbor)):
+                        triangles += 1
         return triangles
     
     
     def getNumberOfTrianglesDirected(self) -> int:
         """
-        Get the number of triangles in the directed graph.
+        Get the number of triangles in the directed graph considering only cycles like a->b->c->a.
+
+        Returns: 
+            The number of triangles in the graph.
         """
         triangles = 0
         for vertex in self._graph:
-            out_neighbors = set(self.get_neighbors(vertex))
-            for out_neighbor in out_neighbors:
-                mutual_out_neighbors = out_neighbors.intersection(set(self.get_neighbors(out_neighbor)))
-                for mutual_out_neighbor in mutual_out_neighbors:
-                    if vertex in self.get_neighbors(mutual_out_neighbor):  # Check if there's a path back to vertex
+            neighbors = self.get_neighbors(vertex)
+            for neighbor in neighbors:
+                mutual_neighbors = self.get_neighbors(neighbor)
+                for mutual_neighbor in mutual_neighbors:
+                    if vertex in self.get_neighbors(mutual_neighbor):  # Check if there's a direct path back to vertex
                         triangles += 1
-        return triangles // 3  # Each triangle is counted three times, once at each vertex
+        return triangles // 3  # Each triangle is counted three times, once for each vertex in the cycle
