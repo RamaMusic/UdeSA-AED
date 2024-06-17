@@ -5,6 +5,9 @@ import numpy as np
 import time
 from tqdm import tqdm
 
+from collections import defaultdict
+
+
 class Graph:
     """
     Graph class
@@ -259,9 +262,9 @@ class Graph:
         return path[::-1]
     
 
-    def estimateGraphDiameter(self, n_samples, seed = None) -> int:
+    def estimateGraphDiameterBetweenTwoRandomNodes(self, n_samples, seed = None) -> int:
         """
-        Estimate the diameter of the graph
+        Estimate the diameter of the graph between two random nodes
         
         Args:
             n_samples: the number of samples
@@ -285,6 +288,41 @@ class Graph:
         
         return max(lengths)
     
+    
+    def estimateGraphDiameter(self, n_samples, seed = None, directed = False) -> int:
+        """
+        Estimate the diameter of the graph starting from one random node and then iterating over the longest path, repeating this process n_samples times and then returning the maximum distance found between all the samples.
+        
+        Args:
+            n_samples: the number of samples
+            seed: the seed for the random generator
+            
+        Returns:
+            the estimated diameter of the graph
+        """
+        if seed:
+            np.random.seed(seed)
+            
+        if not directed:
+            graph = self.create_undirected_graph()
+            
+        max_distance = 0    
+        
+        for _ in tqdm(range(n_samples)):
+            
+            sample = np.random.choice(list(graph._graph.keys()))
+            
+            for _ in range(n_samples):
+                distances, _ = graph.bfs(sample) 
+                distances = {k: v for k, v in distances.items() if v != float('inf')}
+                
+                max_distance = max(max_distance, max(distances.values()))
+                
+                max_vertex = max(distances, key=distances.get)
+                sample = max_vertex
+                
+        return max_distance
+            
     def transposeGraph(self) -> 'Graph':
         """
         Transpose the graph
@@ -361,3 +399,118 @@ class Graph:
         print(f"Converged after {iteration} iterations, aborting...")
             
         return page_rank
+    
+    def dfs(self, start) -> dict:
+        """
+        Perform a Depth First Search (DFS) starting from a given vertex.
+
+        Args:
+            start: The starting vertex.
+
+        Returns:
+            A tuple containing two dictionaries:
+            - The first dictionary maps each vertex to its distance from the start.
+            - The second dictionary maps each vertex to its parent in the DFS tree.
+        """
+
+        # Initialize distances and parents for all vertices in the graph
+        distances = {v: float('inf') for v in self._graph}
+        parents = {v: None for v in self._graph}
+
+        # The distance from the start vertex to itself is 0
+        distances[start] = 0
+        
+        # Use a list as a stack for managing the vertices to visit
+        stack = [start]
+        
+        while stack:
+            vertex = stack.pop()
+            for neighbor in self.get_neighbors(vertex):
+                # If the neighbor hasn't been visited, update its distance and parent
+                if distances[neighbor] == float('inf'):
+                    distances[neighbor] = distances[vertex] + 1
+                    parents[neighbor] = vertex
+                    stack.append(neighbor)  # Add the neighbor to the stack for further exploration
+                    
+        return distances, parents
+    
+    # def estimateGraphCircumference(self, n_samples, seed=None) -> int:
+    #     """
+    #     Estimate the graph circumference.
+        
+    #     Args:
+    #         n_samples: The number of samples.
+    #         seed: The seed for the random generator.
+            
+    #     Returns:
+    #         The estimated circumference of the graph.
+    #     """
+    #     if seed:
+    #         np.random.seed(seed)
+        
+    #     samples = np.random.choice(list(self._graph.keys()), n_samples)
+
+    #     circumferences = []
+    #     for node in tqdm(samples, desc="Estimating Circumference"):
+    #         distances, _ = self.dfs(node)
+    #         distances = {k: v for k, v in distances.items() if v != float('inf')}
+    #         max_distance = max(distances.values(), default=0)
+    #         circumferences.append(max_distance)
+        
+    #     return max(circumferences, default=0)
+    
+    # Puntos extra
+    def averageClusteringCoefficient(self) -> float:
+        """
+        Calculate the average clustering coefficient of the undirected graph more efficiently.
+        
+        Returns:
+            The average clustering coefficient of the undirected graph.
+        """
+
+        undirected_graph = self.create_undirected_graph()
+        total_coefficient = 0
+        precomputed_neighbors = {vertex: set(undirected_graph.get_neighbors(vertex)) for vertex in tqdm(undirected_graph._graph, desc="Precomputing Neighbors")}
+
+        for _, neighbors in tqdm(precomputed_neighbors.items(), desc="Calculating coefficients"):
+            n_neighbors = len(neighbors)
+            if n_neighbors < 2:
+                continue
+            triangles = sum(len(precomputed_neighbors[neighbor].intersection(neighbors)) for neighbor in neighbors)
+            total_coefficient += triangles / (n_neighbors * (n_neighbors - 1))
+
+        return total_coefficient / len(undirected_graph._graph) if undirected_graph._graph else 0
+    
+    def betweenness_centrality(self, n_samples, seed=None) -> tuple:
+        """
+        Estimate the betweenness centrality of the graph with a given number of samples.
+        
+        Args:
+            n_samples: The number of samples.
+            seed: The seed for the random generator.
+            
+        Returns:
+            The node with the highest betweenness centrality and its value.
+        """
+        if seed:
+            np.random.seed(seed)
+        
+        betweenness = defaultdict(int)
+        samples = np.random.choice(list(self._graph.keys()), n_samples)
+
+        for node in tqdm(samples):
+            _, parents = self.bfs(node)
+            for vertex in parents:
+                if parents[vertex] is not None:
+                    current = vertex
+                    while current is not None:
+                        betweenness[current] += 1
+                        current = parents[current]
+
+        normalized_betweenness = {k: v / n_samples for k, v in betweenness.items()}
+
+        max_node = max(normalized_betweenness, key=normalized_betweenness.get)
+        max_value = normalized_betweenness[max_node]
+         
+        
+        return max_node, max_value

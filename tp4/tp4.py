@@ -75,10 +75,9 @@ def act2(page_graph: Graph):
     start = casio.time()
     
     n = 100
-    seed = 42
     
-    print(f"Estimating time for all shortest paths with {n} samples and seed {seed}...")
-    time = page_graph.estimateTimeForShortestPaths(n)
+    print(f"Estimating time for all shortest paths with {n} samples...")
+    time = page_graph.estimateTimeForShortestPaths(n, seed=None)
     processTime(0, time, "Estimated time: ")
     
     end = casio.time()
@@ -117,25 +116,21 @@ def act4(page_graph: Graph):
     print("         P4         ")
     print("--------------------")
     
-    # Acá nuevamente no puedo calcular el diámetro del grafo, pero puedo tomar una muestra de tamaño N y calcular el diámetro de esa muestra. Esto es porque calcular el diámetro me implicaría hacer un recorrido de todos los caminos mínimos, lo cual es imposible en un grafo de tantos vértices a no ser que quiera malgastar 300 horas.
+    # Acá nuevamente no puedo calcular el diámetro del grafo, pero puedo tomar N puntos de inicio e iterar buscando los caminos más largos comparándolos entre sí.
     
     start = casio.time()
     
-    n = 100
-    seed = 42
-    
-    print(f"Estimating the diameter of the graph with {n} samples of 2 nodes and seed {seed}...")
-    
-    diameter = page_graph.estimateGraphDiameter(n)
+    n = 10
+    print(f"Estimating the diameter of the graph with {n} starting vertices...")
+    diameter = page_graph.estimateGraphDiameter(n, seed=None, directed=False)
     print(f"Estimated diameter of the graph: {diameter}")
     
     end = casio.time()
     
     processTime(start, end)
     print()    
-    # Estimating the diameter of the graph with 100 samples and seed 42...
-    # Estimated diameter of the graph: 21
-    # Time elapsed: 4m 33.39s
+    # Estimated diameter of the graph: 24
+    # Time elapsed: 6m 0.09s
     
 def act5(page_graph: Graph):
     print("--------------------")
@@ -171,10 +166,97 @@ def act5(page_graph: Graph):
 
     # Time elapsed: 2m 8.08s
     
+def act6(page_graph: Graph):
+    print("--------------------")
+    print("         P6         ")
+    print("--------------------")
+    
+    start = casio.time()
+    n = 2
+    
+    print(f"Estimating the graph's circunference with {n} samples...")
+    circunference = page_graph.estimateGraphCircumference(n, seed=None)
+    print(f"Estimated circunference of the graph: {circunference}")
+    end = casio.time()
+    
+    processTime(start, end)
+    print()
+    
+    
+# Puntos extra
+
+# def extra1(page_graph: Graph):
+#     print("--------------------")
+#     print("        Extra1      ")
+#     print("--------------------")
+    
+#     # Programe una función genérica que extendiendo la definición del triángulo calcule la
+#     # cantidad de polígonos de K lados. Haga un gráfico para mostrar la cantidad de
+#     # polígonos por cantidad de lados, estimando aquellos que no pueda calcular. (+2
+#     # puntos)
+    
+#     start = casio.time()
+    
+    
+    
+#     end = casio.time()
+    
+#     processTime(start, end)
+#     print()
+    
+#     # Results
+#     # Graph density: 1.0e-05
+#     # Time elapsed: 0.0s
+
+def extra2(page_graph: Graph):
+    print("--------------------")
+    print("        Extra2      ")
+    print("--------------------")
+    
+    start = casio.time()
+    print("Calculating the graph's average clustering coefficient...")
+    clustering_coefficient = page_graph.averageClusteringCoefficient()
+    print(f"Average clustering coefficient: {clustering_coefficient}")
+    end = casio.time()
+    
+    processTime(start, end)
+    print()
+    
+    # Results
+    # Average clustering coefficient: 0.5142961475354295
+    # Time elapsed: 16.24s
+    
+def extra3(page_graph: Graph):
+    print("--------------------")
+    print("        Extra3      ")
+    print("--------------------")
+    
+    start = casio.time()
+    n = 100
+    print(f"Estimating the graph's betweenness centrality with {n} samples...")
+    node, value = page_graph.betweenness_centrality(n, seed=None)
+    print(f"Node with the highest betweenness centrality: {node}, Value: {value}")
+    end = casio.time()
+    
+    processTime(start, end)
+    print()
+    
+    # Results
+    # Node with the highest betweenness centrality: 560622, Value: 48932.75
+    # Time elapsed: 3m 42.17s
+    
 if __name__ == "__main__":
     page_graph = readGraph()
+    
+    # Actividades
     # act1(page_graph)
     # act2(page_graph)
     # act3(page_graph, undirected=False)
     # act4(page_graph)
-    act5(page_graph)
+    # act5(page_graph)
+    # act6(page_graph)
+    
+    # Extras
+    # extra1(page_graph)
+    # extra2(page_graph)
+    # extra3(page_graph)
