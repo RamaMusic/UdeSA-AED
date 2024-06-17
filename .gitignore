@@ -16,3 +16,7 @@
 .clases/*
 /parcial/*
 .parcial/*
+
+.tp4/__pycache__/*
+/tp4/__pycache__/*
+.tp4/*.pyc
