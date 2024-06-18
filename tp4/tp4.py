@@ -172,16 +172,23 @@ def act6(page_graph: Graph):
     print("--------------------")
     
     start = casio.time()
-    n = 2
-    
-    print(f"Estimating the graph's circunference with {n} samples...")
-    circunference = page_graph.estimateGraphCircumference(n, seed=None)
+    print(f"Estimating the graph's circunference...")
+    circunference = page_graph.find_circumference(timeout=10) # Change the timeout if needed. 5s works fine but 10s is more reliable.
     print(f"Estimated circunference of the graph: {circunference}")
     end = casio.time()
     
     processTime(start, end)
     print()
     
+    # Estimating the graph's circunference...
+    #         Cycle of length 214 found!                                                                                                                                                                           
+    #         Cycle of length 321 found!                                                                                                                                                                           
+    #         Cycle of length 327 found!                                                                                                                                                                           
+    #         Cycle of length 330 found!                                                                                                                                                                           
+    #         Cycle of length 331 found!                                                                                                                                                                           
+    # Estimated circunference of the graph: 331
+    # Time elapsed: 1m 37.0s
+        
     
 # Puntos extra
 
@@ -197,7 +204,7 @@ def act6(page_graph: Graph):
     
 #     start = casio.time()
     
-    
+
     
 #     end = casio.time()
     
@@ -261,9 +268,9 @@ if __name__ == "__main__":
     # act3(page_graph, undirected=False)
     # act4(page_graph)
     # act5(page_graph)
-    # act6(page_graph)
+    act6(page_graph)
     
     # Extras
     # extra1(page_graph)
-    extra2(page_graph, directed=True)
+    # extra2(page_graph, directed=True)
     # extra3(page_graph)

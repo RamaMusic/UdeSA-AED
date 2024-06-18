@@ -430,30 +430,79 @@ class Graph:
                     
         return distances, parents
     
-    # def estimateGraphCircumference(self, n_samples, seed=None) -> int:
-    #     """
-    #     Estimate the graph circumference.
-        
-    #     Args:
-    #         n_samples: The number of samples.
-    #         seed: The seed for the random generator.
-            
-    #     Returns:
-    #         The estimated circumference of the graph.
-    #     """
-    #     if seed:
-    #         np.random.seed(seed)
-        
-    #     samples = np.random.choice(list(self._graph.keys()), n_samples)
+    def _find_cycle_with_length(self, start_node, visited, path_stack, cycle_length):
+        stack = [(start_node, [start_node])]
+        while stack:
+            current_node, path = stack.pop()
+            if current_node not in visited:
+                visited.add(current_node)
+                path_stack[current_node] = path
+                for neighbor in self.get_neighbors(current_node):
+                    if neighbor not in visited:
+                        stack.append((neighbor, path + [neighbor]))
+                    elif neighbor in path_stack and neighbor in path:
+                        cycle = path
+                        if len(cycle) - cycle.index(neighbor) == cycle_length:
+                            return cycle[cycle.index(neighbor):]
+            elif current_node in path_stack and current_node in path:
+                if len(path) - path.index(current_node) == cycle_length:
+                    return path[path.index(current_node):]
+                else:
+                    return []
+        return []
 
-    #     circumferences = []
-    #     for node in tqdm(samples, desc="Estimating Circumference"):
-    #         distances, _ = self.dfs(node)
-    #         distances = {k: v for k, v in distances.items() if v != float('inf')}
-    #         max_distance = max(distances.values(), default=0)
-    #         circumferences.append(max_distance)
-        
-    #     return max(circumferences, default=0)
+    def find_cycle_of_length(self, cycle_length=3, timeout=5):
+        start_time = time.time()
+        updates = timeout / 0.1  # Assuming an update every 0.1 seconds
+        pbar = tqdm(total=updates, desc=f"Checking for cycles of length {cycle_length}", leave=False, unit="checks")
+        cycle_found = False
+
+        for node in self._graph:
+            if time.time() - start_time > timeout:
+                break
+            visited = set()
+            cycle = self._find_cycle_with_length(node, visited, {}, cycle_length)
+            if cycle:
+                cycle_found = True
+                break
+            # Update progress bar based on elapsed time
+            elapsed = time.time() - start_time
+            expected_updates = elapsed / 0.1
+            while pbar.n < expected_updates:
+                pbar.update(1)
+
+        pbar.close()  # Close the progress bar regardless of the outcome
+
+        # If a cycle is found, print a message instead of leaving the progress bar
+        if cycle_found:
+            print(f"\tCycle of length {cycle_length} found!")
+            return cycle
+        else:
+            return[]
+
+    def _cycle_length_worker(self, cycle_length, timeout):
+        cycle = self.find_cycle_of_length(cycle_length, timeout)
+        if cycle:
+            return len(cycle)
+        return 0
+
+    def find_circumference(self, timeout=5):
+        vertices = list(self._graph.keys())
+        circumference = [0]
+
+        def binary_search_cycle_length(low, high):
+            if low > high:
+                return
+            mid = (low + high) // 2
+            cycle_length = self._cycle_length_worker(mid, timeout)
+            circumference[0] = max(circumference[0], cycle_length)
+            if cycle_length == mid:
+                binary_search_cycle_length(mid + 1, high)
+            else:
+                binary_search_cycle_length(low, mid - 1)
+
+        binary_search_cycle_length(2, len(vertices))
+        return circumference[0]
     
     # Puntos extra
     def average_clustering_coefficient_undirected(self) -> float:
@@ -536,3 +585,30 @@ class Graph:
          
         
         return max_node, max_value
+    
+    
+    def estimateKSidePolygons(self, k, seed=None) -> int:
+        """
+        Estimate the number of k-side polygons in the graph.
+        
+        Args:
+            k: The number of sides of the polygon.
+            seed: The seed for the random generator.
+            
+        Returns:
+            The estimated number of k-side polygons in the graph.
+        """
+        if seed:
+            np.random.seed(seed)
+        
+        polygons = 0
+        for _ in tqdm(range(1000)):
+            vertex = np.random.choice(list(self._graph.keys()))
+            neighbors = self.get_neighbors(vertex)
+            if len(neighbors) < k:
+                continue
+            for neighbor in neighbors:
+                mutual_neighbors = self.get_neighbors(neighbor).intersection(neighbors)
+                polygons += sum(1 for mutual_neighbor in mutual_neighbors if mutual_neighbor > vertex)
+                
+        return polygons // k
