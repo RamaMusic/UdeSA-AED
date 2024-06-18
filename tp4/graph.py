@@ -586,7 +586,7 @@ class Graph:
         
         return max_node, max_value
     
-    
+    # a checkear
     def estimateKSidePolygons(self, k, seed=None) -> int:
         """
         Estimate the number of k-side polygons in the graph.
@@ -612,3 +612,50 @@ class Graph:
                 polygons += sum(1 for mutual_neighbor in mutual_neighbors if mutual_neighbor > vertex)
                 
         return polygons // k
+    
+    # a checkear v2, código de ana
+    def count_k_polygons(self, k: int, sample_nodes: List[str]) -> int:
+            def dfs_find_polygons(start, current, length, visited):
+                if length == k:
+                    if current == start:
+                        return 1
+                    return 0
+                
+                if length > k:
+                    return 0
+                
+                visited.add(current)
+                polygons_count = 0
+
+                for neighbor in self.get_neighbors(current):
+                    if neighbor not in visited or (neighbor == start and length + 1 == k):
+                        polygons_count += dfs_find_polygons(start, neighbor, length + 1, visited)
+                
+                visited.remove(current)
+                return polygons_count
+            
+            total_polygons = 0
+            for node in sample_nodes:
+                total_polygons += dfs_find_polygons(node, node, 0, set())
+
+            # cada polígono se cuenta k veces, una por cada vértice, entonces divido por k
+            return total_polygons // k
+    
+    # micol
+    def checkIfPathExists(self, path: List[str]) -> bool:
+        """
+        Check if a path exists in the graph and forms a cycle.
+        
+        Args:
+            path: The path to check.
+            
+        Returns:
+            True if the path exists and forms a cycle, False otherwise.
+        """
+        path = path.copy()
+        path.pop()
+        for i in range(len(path) - 1):
+            if not self.edge_exists(path[i], path[i+1]):
+                return False
+        # Check if there's an edge from the last node back to the first node to form a cycle
+        return self.edge_exists(path[-1], path[0]) if path else False
