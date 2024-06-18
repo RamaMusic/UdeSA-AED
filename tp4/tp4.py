@@ -208,22 +208,29 @@ def act6(page_graph: Graph):
 #     # Graph density: 1.0e-05
 #     # Time elapsed: 0.0s
 
-def extra2(page_graph: Graph):
+def extra2(page_graph: Graph, directed = False):
     print("--------------------")
     print("        Extra2      ")
     print("--------------------")
     
     start = casio.time()
-    print("Calculating the graph's average clustering coefficient...")
-    clustering_coefficient = page_graph.averageClusteringCoefficient()
-    print(f"Average clustering coefficient: {clustering_coefficient}")
+    print("Calculating the graph's average clustering coefficient for an undirected graph...")
+    clustering_coefficient = page_graph.average_clustering_coefficient_undirected()
+    print(f"Average clustering coefficient for an undirected graph: {clustering_coefficient}")
+    
+    if directed:
+        print("Calculating the graph's average clustering coefficient for a directed graph...")
+        clustering_coefficient_directed = page_graph.average_clustering_coefficient_directed()
+        print(f"Average clustering coefficient for a directed graph: {clustering_coefficient_directed}")
+    
     end = casio.time()
     
     processTime(start, end)
     print()
     
     # Results
-    # Average clustering coefficient: 0.5142961475354295
+    # Average clustering coefficient for an undirected graph: 0.5142961475354295
+    # Average clustering coefficient for a directed graph: 0.3651263215748557
     # Time elapsed: 16.24s
     
 def extra3(page_graph: Graph):
@@ -258,5 +265,5 @@ if __name__ == "__main__":
     
     # Extras
     # extra1(page_graph)
-    # extra2(page_graph)
+    extra2(page_graph, directed=True)
     # extra3(page_graph)

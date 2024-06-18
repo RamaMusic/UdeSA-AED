@@ -116,7 +116,7 @@ class Graph:
         undirected_graph = self.create_undirected_graph()
         visited = {vertex: False for vertex in undirected_graph._graph}
         wcc = []
-        for vertex in tqdm(undirected_graph._graph):  # Step 2: Wrap with tqdm
+        for vertex in tqdm(undirected_graph._graph):
             if not visited[vertex]:
                 wcc.append(self.isWCC(vertex, visited, undirected_graph))
         return wcc
@@ -413,24 +413,20 @@ class Graph:
             - The second dictionary maps each vertex to its parent in the DFS tree.
         """
 
-        # Initialize distances and parents for all vertices in the graph
         distances = {v: float('inf') for v in self._graph}
         parents = {v: None for v in self._graph}
 
-        # The distance from the start vertex to itself is 0
         distances[start] = 0
         
-        # Use a list as a stack for managing the vertices to visit
         stack = [start]
         
         while stack:
             vertex = stack.pop()
             for neighbor in self.get_neighbors(vertex):
-                # If the neighbor hasn't been visited, update its distance and parent
                 if distances[neighbor] == float('inf'):
                     distances[neighbor] = distances[vertex] + 1
                     parents[neighbor] = vertex
-                    stack.append(neighbor)  # Add the neighbor to the stack for further exploration
+                    stack.append(neighbor)
                     
         return distances, parents
     
@@ -460,9 +456,9 @@ class Graph:
     #     return max(circumferences, default=0)
     
     # Puntos extra
-    def averageClusteringCoefficient(self) -> float:
+    def average_clustering_coefficient_undirected(self) -> float:
         """
-        Calculate the average clustering coefficient of the undirected graph more efficiently.
+        Calculate the average clustering coefficient of the undirected graph.
         
         Returns:
             The average clustering coefficient of the undirected graph.
@@ -480,6 +476,32 @@ class Graph:
             total_coefficient += triangles / (n_neighbors * (n_neighbors - 1))
 
         return total_coefficient / len(undirected_graph._graph) if undirected_graph._graph else 0
+    
+    def average_clustering_coefficient_directed(self) -> float:
+        """
+        Calculate the average clustering coefficient of the directed graph.
+        
+        Returns:
+            The average clustering coefficient of the directed graph.
+        """
+        total_coefficient = 0
+        neighbors_cache = {vertex: set(self.get_neighbors(vertex)) for vertex in tqdm(self._graph, desc="Precomputing Neighbors")}
+        
+        for _, neighbors in tqdm(neighbors_cache.items(), desc="Calculating coefficients"):
+            if len(neighbors) < 2:
+                continue
+            
+            triangles = 0
+            for neighbor in neighbors:
+                mutual_neighbors = neighbors_cache[neighbor].intersection(neighbors)
+                triangles += len(mutual_neighbors)
+            
+            triangles /= 2
+            
+            possible_triangles = len(neighbors) * (len(neighbors) - 1) / 2
+            total_coefficient += triangles / possible_triangles if possible_triangles > 0 else 0
+
+        return total_coefficient / len(self._graph) if self._graph else 0
     
     def betweenness_centrality(self, n_samples, seed=None) -> tuple:
         """
