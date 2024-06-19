@@ -400,36 +400,6 @@ class Graph:
             
         return page_rank
     
-    def dfs(self, start) -> dict:
-        """
-        Perform a Depth First Search (DFS) starting from a given vertex.
-
-        Args:
-            start: The starting vertex.
-
-        Returns:
-            A tuple containing two dictionaries:
-            - The first dictionary maps each vertex to its distance from the start.
-            - The second dictionary maps each vertex to its parent in the DFS tree.
-        """
-
-        distances = {v: float('inf') for v in self._graph}
-        parents = {v: None for v in self._graph}
-
-        distances[start] = 0
-        
-        stack = [start]
-        
-        while stack:
-            vertex = stack.pop()
-            for neighbor in self.get_neighbors(vertex):
-                if distances[neighbor] == float('inf'):
-                    distances[neighbor] = distances[vertex] + 1
-                    parents[neighbor] = vertex
-                    stack.append(neighbor)
-                    
-        return distances, parents
-    
     def _find_cycle_with_length(self, start_node, visited, path_stack, cycle_length):
         stack = [(start_node, [start_node])]
         while stack:
@@ -486,7 +456,7 @@ class Graph:
             return len(cycle)
         return 0
 
-    def find_circumference(self, timeout=5):
+    def findCircumference(self, timeout=5):
         vertices = list(self._graph.keys())
         circumference = [0]
 
@@ -552,7 +522,18 @@ class Graph:
 
         return total_coefficient / len(self._graph) if self._graph else 0
     
-    def betweenness_centrality(self, n_samples, seed=None) -> tuple:
+    def avgClusteringCoefficient(self, directed = False) -> float:
+        """
+        Calculate the average clustering coefficient of the graph.
+        
+        Returns:
+            The average clustering coefficient of the graph.
+        """
+        if not directed:
+            return self.average_clustering_coefficient_undirected()
+        return self.average_clustering_coefficient_directed()
+    
+    def betweennessCentrality(self, n_samples, seed=None) -> tuple:
         """
         Estimate the betweenness centrality of the graph with a given number of samples.
         
@@ -586,62 +567,54 @@ class Graph:
         
         return max_node, max_value
     
-    # a checkear
-    def estimateKSidePolygons(self, k, seed=None) -> int:
+    def find_k_cycles(self, start_node, k):
         """
-        Estimate the number of k-side polygons in the graph.
+        Identifies all cycles of length k that start and end at the specified node.
         
         Args:
-            k: The number of sides of the polygon.
-            seed: The seed for the random generator.
-            
-        Returns:
-            The estimated number of k-side polygons in the graph.
-        """
-        if seed:
-            np.random.seed(seed)
+            start_node: The node from which to start the search.
+            k: The length of the cycles to find.
         
-        polygons = 0
-        for _ in tqdm(range(1000)):
-            vertex = np.random.choice(list(self._graph.keys()))
-            neighbors = self.get_neighbors(vertex)
-            if len(neighbors) < k:
-                continue
-            for neighbor in neighbors:
-                mutual_neighbors = self.get_neighbors(neighbor).intersection(neighbors)
-                polygons += sum(1 for mutual_neighbor in mutual_neighbors if mutual_neighbor > vertex)
-                
-        return polygons // k
-    
-    # a checkear v2, código de ana
-    def count_k_polygons(self, k: int, sample_nodes: List[str]) -> int:
-            def dfs_find_polygons(start, current, length, visited):
-                if length == k:
-                    if current == start:
-                        return 1
-                    return 0
-                
-                if length > k:
-                    return 0
-                
-                visited.add(current)
-                polygons_count = 0
+        Returns:
+            A list of cycles, each represented as a list of nodes.
+        """
+        transposed_graph = self.transposeGraph()
+        exploration_stack = [(start_node, [start_node], 1)]
+        found_cycles = []
 
-                for neighbor in self.get_neighbors(current):
-                    if neighbor not in visited or (neighbor == start and length + 1 == k):
-                        polygons_count += dfs_find_polygons(start, neighbor, length + 1, visited)
-                
-                visited.remove(current)
-                return polygons_count
-            
-            total_polygons = 0
-            for node in sample_nodes:
-                total_polygons += dfs_find_polygons(node, node, 0, set())
+        while exploration_stack:
+            node, path, depth = exploration_stack.pop()
 
-            # cada polígono se cuenta k veces, una por cada vértice, entonces divido por k
-            return total_polygons // k
-    
-    # micol
+            if depth == k and start_node in self.get_neighbors(node).union(transposed_graph.get_neighbors(node)):
+                found_cycles.append(path)
+            elif depth < k:
+                neighbors = self.get_neighbors(node).union(transposed_graph.get_neighbors(node))
+                for neighbor in neighbors.difference(path):
+                    exploration_stack.append((neighbor, path + [neighbor], depth + 1))
+
+        return found_cycles
+
+    def estimateKCycles(self, k, sample_size):
+        """
+        Estimates the number of cycles of length k in the graph using a sampling method.
+        
+        Args:
+            k: The cycle length to estimate in the graph.
+            sample_size: The number of nodes to sample for the estimation.
+        
+        Returns:
+            An estimate of the total number of k-cycles in the graph.
+        """
+        cycle_count = 0
+        vertices = list(self._graph.keys())
+        np.random.shuffle(vertices)
+
+        for start_node in tqdm(vertices[:sample_size], desc=f"Estimating {k}-cycles"):
+            cycle_count += len(self.find_k_cycles(start_node, k))
+
+        graph_size = len(vertices)
+        return cycle_count / (2 * k) * graph_size / sample_size
+        
     def checkIfPathExists(self, path: List[str]) -> bool:
         """
         Check if a path exists in the graph and forms a cycle.
@@ -659,3 +632,4 @@ class Graph:
                 return False
         # Check if there's an edge from the last node back to the first node to form a cycle
         return self.edge_exists(path[-1], path[0]) if path else False
+        
