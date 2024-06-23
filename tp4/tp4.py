@@ -269,14 +269,14 @@ if __name__ == "__main__":
     page_graph = readGraph()
 
     # Actividades
-    # act1(page_graph)
-    # act2(page_graph)
-    # act3(page_graph, undirected=False)
-    # act4(page_graph)
+    act1(page_graph)
+    act2(page_graph)
+    act3(page_graph, undirected=False)
+    act4(page_graph)
     act5(page_graph)
-    # act6(page_graph)
+    act6(page_graph)
 
     # Extras
-    # extra1(page_graph)
-    # extra2(page_graph, printDirectedAndUndirected=True)
-    # extra3(page_graph)
+    extra1(page_graph)
+    extra2(page_graph, printDirectedAndUndirected=True)
+    extra3(page_graph)

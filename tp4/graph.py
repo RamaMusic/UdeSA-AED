@@ -600,6 +600,7 @@ class Graph:
     def estimateKCycles(self, k, sample_size):
         """
         Estimates the number of cycles of length k in the graph using a sampling method.
+        If the K value is 3, the function will return the number of triangles in the graph calculated previously.
         
         Args:
             k: The cycle length to estimate in the graph.
@@ -608,6 +609,9 @@ class Graph:
         Returns:
             An estimate of the total number of k-cycles in the graph.
         """
+        if k == 3:
+            return self.getNumberOfTrianglesUndirected()
+        
         cycle_count = 0
         vertices = list(self._graph.keys())
         np.random.shuffle(vertices)
