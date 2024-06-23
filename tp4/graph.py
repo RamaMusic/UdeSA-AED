@@ -585,11 +585,14 @@ class Graph:
         while exploration_stack:
             node, path, depth = exploration_stack.pop()
 
-            if depth == k and start_node in self.get_neighbors(node).union(transposed_graph.get_neighbors(node)):
+            current_neighbors = set(self.get_neighbors(node))
+            transposed_neighbors = set(transposed_graph.get_neighbors(node))
+            all_neighbors = current_neighbors.union(transposed_neighbors)
+
+            if depth == k and start_node in all_neighbors:
                 found_cycles.append(path)
             elif depth < k:
-                neighbors = self.get_neighbors(node).union(transposed_graph.get_neighbors(node))
-                for neighbor in neighbors.difference(path):
+                for neighbor in all_neighbors.difference(path):
                     exploration_stack.append((neighbor, path + [neighbor], depth + 1))
 
         return found_cycles

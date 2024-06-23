@@ -49,107 +49,110 @@ def act1(page_graph: Graph):
     print("         P1         ")
     print("--------------------")
     start = casio.time()
-    
+
     print("Calculating number of weakly connected components and size of the biggest weakly connected component...")
     number_of_wcc, wcc_dict = page_graph.getNumberOfWCC()
     biggest_wcc_size = page_graph.getBiggestWCC(wcc=wcc_dict)
 
     print(f"Number of weakly connected components: {number_of_wcc}")
     print(f"Size of the biggest weakly connected component: {biggest_wcc_size}")
-    
+
     end = casio.time()
-    
+
     processTime(start, end)
     print()
-    # Los resultados son: 
-    # Number of weakly connected components: 2746 
+    # Los resultados son:
+    # Number of weakly connected components: 2746
     # Size of the biggest weakly connected component: 855802
 
 def act2(page_graph: Graph):
     # Como mi grafo tiene 875713 vertices, no puedo calcular el tiempo que me llevaría recorrer todos los caminos mínimos; pero puedo tomar una muestra de tamaño N y calcular el promedio de los caminos mínimos de esa muestra, después multiplicar ese promedio por el total de caminos mínimos posibles para obtener una estimación del tiempo que me llevaría recorrer todos los caminos.
-    
+
+    # Inicialmente el algoritmo planteado para dar el número exacto de caminos mínimos tiene una complejidad de O( |V| * ( |V| + |E| ) ) donde |V| es el número de vértices y |E| es el número de aristas.
+
+    # El algoritmo realizado para calcular de mi BFS tiene una complejidad de: O( ( |V| + |E| ) * |N| ) donde |V| es el número de vértices, |E| es el número de aristas y |N| es el número de muestras.
     print("--------------------")
     print("         P2         ")
     print("--------------------")
-    
+
     start = casio.time()
-    
+
     n = 100
-    
+
     print(f"Estimating time for all shortest paths with {n} samples...")
     time = page_graph.estimateTimeForShortestPaths(n, seed=None)
     processTime(0, time, "Estimated time: ")
-    
+
     end = casio.time()
-    
+
     processTime(start, end)
-    print()    
-    # El resultado es: 
+    print()
+    # El resultado es:
     # Estimated time: 328.0h 43.0m 20.89s
-    
+
 def act3(page_graph: Graph, undirected = False):
     print("--------------------")
     print("         P3         ")
     print("--------------------")
-    
+
     start = casio.time()
-    
+
     print("Calculating the number of triangles using a directed Graph...")
     n_triangles_directed = page_graph.getNumberOfTrianglesDirected()
     print(f"Number of triangles using a Directed Graph: {n_triangles_directed:,}")
-    
+
     if undirected:
         print("Calculating the number of triangles using an undirected Graph...")
         n_trinagles_undirected = page_graph.getNumberOfTrianglesUndirected()
         print(f"Number of triangles using an Undirected Graph: {n_trinagles_undirected:,}")
-        
+
     end = casio.time()
-    
+
     processTime(start, end)
-    print()    
+    print()
     # Results:
     # Number of triangles using a Directed Graph: 3,889,771
     # Number of triangles using an Undirected Graph: 13,391,903
-    
+
 def act4(page_graph: Graph):
     print("--------------------")
     print("         P4         ")
     print("--------------------")
-    
+
     # Acá nuevamente no puedo calcular el diámetro del grafo, pero puedo tomar N puntos de inicio e iterar buscando los caminos más largos comparándolos entre sí.
-    
+
     start = casio.time()
-    
+
     n = 10
     print(f"Estimating the diameter of the graph with {n} starting vertices...")
     diameter = page_graph.estimateGraphDiameter(n, seed=None, directed=False)
     print(f"Estimated diameter of the graph: {diameter}")
-    
+
     end = casio.time()
-    
+
     processTime(start, end)
-    print()    
+    print()
     # Estimated diameter of the graph: 24
     # Time elapsed: 6m 0.09s
-    
+
 def act5(page_graph: Graph):
     print("--------------------")
     print("         P5         ")
     print("--------------------")
-    
+
     # Calculo el pageRank de los 10 primeros vértices
     start = casio.time()
-    
+
     n = 10
-    
+
     print(f"Finding the top {n} vertices with the highest PageRank...")
-    
+
     print(page_graph.getTopPageRankVertices(n))
     end = casio.time()
-    
+
     processTime(start, end)
-    print() 
-    
+    print()
+
     # Results
     # Converged after 61 iterations, aborting...
     # Top vertices with the highest PageRank:
@@ -165,39 +168,39 @@ def act5(page_graph: Graph):
     # Vertex: 558791, PageRank: 0.0004947016865199656
 
     # Time elapsed: 2m 8.08s
-    
+
 def act6(page_graph: Graph):
     print("--------------------")
     print("         P6         ")
     print("--------------------")
-    
+
     start = casio.time()
     print(f"Estimating the graph's circumference...")
     # circumference = page_graph.find_circumference(timeout=10) # Change the timeout if needed. 5s works fine but 10s is more reliable.
     circumference = page_graph.findCircumference(timeout=10)
     print(f"Estimated circumference of the graph: {circumference}")
     end = casio.time()
-    
+
     processTime(start, end)
     print()
-    
+
     # Estimating the graph's circumference...
-    #         Cycle of length 214 found!                                                                                                                                                                           
-    #         Cycle of length 321 found!                                                                                                                                                                           
-    #         Cycle of length 327 found!                                                                                                                                                                           
-    #         Cycle of length 330 found!                                                                                                                                                                           
-    #         Cycle of length 331 found!                                                                                                                                                                           
+    #         Cycle of length 214 found!
+    #         Cycle of length 321 found!
+    #         Cycle of length 327 found!
+    #         Cycle of length 330 found!
+    #         Cycle of length 331 found!
     # Estimated circumference of the graph: 331
     # Time elapsed: 1m 37.0s
-        
-    
+
+
 # Puntos extra
 
 def extra1(page_graph: Graph):
     print("--------------------")
     print("        Extra1      ")
     print("--------------------")
-    
+
     start = casio.time()
     iterations = [1000, 100, 10]
     k_values = [3, 4, 5]
@@ -205,7 +208,7 @@ def extra1(page_graph: Graph):
     for i in range(len(iterations)):
         ans = page_graph.estimateKCycles(k_values[i], iterations[i])
         graph_y.append(ans)
-    
+
     plt.figure()
     plt.bar(k_values, graph_y, edgecolor='black')
     plt.xlabel('k')
@@ -213,67 +216,67 @@ def extra1(page_graph: Graph):
     plt.title('Number of k-side polygons in the graph')
     plt.yscale('log')
     plt.show()
-        
+
     end = casio.time()
-    
+
     processTime(start, end)
 
 def extra2(page_graph: Graph, printDirectedAndUndirected = False):
     print("--------------------")
     print("        Extra2      ")
     print("--------------------")
-    
+
     start = casio.time()
     print("Calculating the graph's average clustering coefficient for an undirected graph...")
     clustering_coefficient = page_graph.avgClusteringCoefficient()
     print(f"Average clustering coefficient for an undirected graph: {clustering_coefficient}")
-    
+
     if printDirectedAndUndirected:
         print("Calculating the graph's average clustering coefficient for a directed graph...")
         clustering_coefficient_directed = page_graph.avgClusteringCoefficient(directed=True)
         print(f"Average clustering coefficient for a directed graph: {clustering_coefficient_directed}")
-    
+
     end = casio.time()
-    
+
     processTime(start, end)
     print()
-    
+
     # Results
     # Average clustering coefficient for an undirected graph: 0.5142961475354295
     # Average clustering coefficient for a directed graph: 0.3651263215748557
     # Time elapsed: 16.24s
-    
+
 def extra3(page_graph: Graph):
     print("--------------------")
     print("        Extra3      ")
     print("--------------------")
-    
+
     start = casio.time()
     n = 100
     print(f"Estimating the graph's betweenness centrality with {n} samples...")
     node, value = page_graph.betweennessCentrality(n, seed=None)
     print(f"Node with the highest betweenness centrality: {node}, Value: {value}")
     end = casio.time()
-    
+
     processTime(start, end)
     print()
-    
+
     # Results
     # Node with the highest betweenness centrality: 560622, Value: 48932.75
     # Time elapsed: 3m 42.17s
-    
+
 if __name__ == "__main__":
     page_graph = readGraph()
-    
+
     # Actividades
     # act1(page_graph)
     # act2(page_graph)
     # act3(page_graph, undirected=False)
     # act4(page_graph)
-    # act5(page_graph)
+    act5(page_graph)
     # act6(page_graph)
-    
+
     # Extras
-    extra1(page_graph)
+    # extra1(page_graph)
     # extra2(page_graph, printDirectedAndUndirected=True)
     # extra3(page_graph)
